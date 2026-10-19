@@ -214,7 +214,7 @@ def score_series(scores: dict[str, DayScore], key: str, limit: int | None = None
 FOCUS_LINES: dict[str, str] = {
     "sleep_hours": "Sleep was {v} h — the 7 h floor is where the ring starts closing.",
     "steps": "{v} steps. A short walk covers the gap to 9,000.",
-    "gym": "{v} session(s) in the last seven days — two closes the ring.",
+    "gym": "{v} session{s} in the last seven days — two closes the ring.",
     "screen_hours": "{v} h of screen time against a 3 h target.",
     "pickups": "{v} pickups. Every extra hundred is a small leak.",
     "deep_blocks": "{v} deep blocks — three fills the ring.",
@@ -222,7 +222,6 @@ FOCUS_LINES: dict[str, str] = {
     "greens": "No greens or fruit logged today.",
     "alcohol": "Alcohol nudged the body ring down this week.",
     "avoid_habit": "Room to grow on the habit you're avoiding.",
-    "connect": "No real connection logged today.",
     "read": "Ten minutes of reading is still on the table.",
     "learned": "Nothing learned logged today.",
 }
@@ -249,7 +248,10 @@ def focus_line(day: DayScore) -> dict[str, Any] | None:
     if weakest is None:
         return None
     template = FOCUS_LINES.get(weakest.id)
-    line = template.format(v=_fmt(weakest.value)) if template else None
+    value = weakest.value
+    # {s} is the plural the sentence needs: "0 sessions", "1 session".
+    one = isinstance(value, (int, float)) and not isinstance(value, bool) and abs(value) == 1
+    line = template.format(v=_fmt(value), s="" if one else "s") if template else None
     if line is None:
         line = f"{weakest.label} is the lightest part of today."
     return {
@@ -354,7 +356,6 @@ TREND_UNITS: dict[str, str] = {
     "deep_blocks": "",
     "mood": "/5",
     "energy": "/5",
-    "connect": "",
     "gym": " sessions a week",
 }
 
@@ -437,7 +438,7 @@ def trends(
             )
 
     # Individual fields worth a sentence.
-    watched = ["sleep_hours", "steps", "screen_hours", "pickups", "outdoor", "deep_blocks", "mood", "energy", "connect"]
+    watched = ["sleep_hours", "steps", "screen_hours", "pickups", "outdoor", "deep_blocks", "mood", "energy"]
     for metric_id in watched:
         metric = M.METRIC_INDEX[metric_id]
         pairs = [

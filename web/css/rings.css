@@ -1,6 +1,7 @@
 /* The ring composition: four concentric arcs around one score. */
 
 .rings {
+  container: rings / size;
   position: relative;
   width: min(76vw, 400px);
   aspect-ratio: 1 / 1;
@@ -63,8 +64,10 @@
   pointer-events: none;
 }
 
+/* The score scales with the ring, not the window: a rail ring and a full-page
+   ring can be the same drawing at two sizes. */
 .ring-score {
-  font-size: var(--fs-display);
+  font-size: clamp(1.3rem, 21cqw, 3.15rem);
   font-weight: 600;
   line-height: 0.92;
   letter-spacing: -0.045em;
@@ -73,7 +76,7 @@
 }
 
 .ring-score[data-empty="true"] {
-  font-size: clamp(1.5rem, 6vw, 2rem);
+  font-size: clamp(0.95rem, 12cqw, 2rem);
   color: var(--ink-3);
   letter-spacing: -0.02em;
 }

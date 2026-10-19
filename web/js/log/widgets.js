@@ -1,5 +1,10 @@
-/* One widget per field type. Each returns { el, value(), focus() }.
-   Answering is a single tap wherever the data allows it. */
+/* One widget per field type. Each returns { el, value(), commit(), focus() }.
+   Answering is a single tap wherever the data allows it.
+
+   Two callbacks, and the difference matters:
+     onCommit(answer)  a finished answer — a preset, a choice, "Continue"
+     onLive(answer)    the value settled while dragging or tapping, so a
+                       caller can save it without a second tap */
 
 import { h } from "../core/dom.js";
 import { round } from "../core/format.js";
@@ -25,7 +30,6 @@ export function displayNumber(metric, value) {
 
 export function presetLabel(metric, preset) {
   if (metric.id === "deep_blocks") return `${preset} block${preset > 1 ? "s" : ""}`;
-  if (metric.id === "connect") return `${preset} ${preset > 1 ? "people" : "person"}`;
   if (metric.id === "gym") return `1 session`;
   if (metric.unit === "h") return `${preset} h`;
   if (metric.unit === "min") return `${preset} min`;
@@ -56,7 +60,7 @@ function presetRow(metric, onPick) {
 }
 
 /** Slider for anything with a sensible range. */
-export function numberWidget(metric, { value, onCommit }) {
+export function numberWidget(metric, { value, onCommit, onLive }) {
   let current = value;
   let touched = value != null;
 
@@ -81,7 +85,11 @@ export function numberWidget(metric, { value, onCommit }) {
       readout.dataset.empty = "false";
       readout.firstChild.textContent = displayNumber(metric, current);
     },
-    onchange: () => haptic(6),
+    onchange: () => {
+      haptic(6);
+      // Releasing the slider is an answer: it must never need a second tap.
+      onLive?.(touched ? current : null);
+    },
   });
 
   return {
@@ -117,9 +125,10 @@ export function numberWidget(metric, { value, onCommit }) {
 }
 
 /** Tap counter for things you accumulate through the day. */
-export function counterWidget(metric, { value, onCommit }) {
+export function counterWidget(metric, { value, onCommit, onLive }) {
   let current = Number(value ?? 0);
   let touched = value != null;
+  let timer = null;
 
   const readout = h(
     "div",
@@ -127,6 +136,17 @@ export function counterWidget(metric, { value, onCommit }) {
     h("strong", { class: "num" }, touched ? displayNumber(metric, current) : "—"),
     metric.unit ? h("span", {}, metric.unit === "steps" ? "steps" : metric.unit) : null
   );
+
+  // Two taps in quick succession are one answer, not two saves.
+  function settled() {
+    clearTimeout(timer);
+    timer = setTimeout(() => onLive?.(touched ? current : null), 700);
+  }
+
+  function paint() {
+    readout.dataset.empty = "false";
+    readout.firstChild.textContent = displayNumber(metric, current);
+  }
 
   const plus = h(
     "button",
@@ -138,8 +158,8 @@ export function counterWidget(metric, { value, onCommit }) {
         current = Math.min(current + 1, metric.max ?? 99);
         touched = true;
         haptic(12);
-        readout.dataset.empty = "false";
-        readout.firstChild.textContent = displayNumber(metric, current);
+        paint();
+        settled();
         plus.dataset.tapped = "true";
         setTimeout(() => (plus.dataset.tapped = "false"), 140);
       },
@@ -156,8 +176,8 @@ export function counterWidget(metric, { value, onCommit }) {
       onclick: () => {
         current = Math.max(current - 1, metric.min ?? 0);
         touched = true;
-        readout.dataset.empty = "false";
-        readout.firstChild.textContent = displayNumber(metric, current);
+        paint();
+        settled();
       },
     },
     "−"
@@ -247,12 +267,14 @@ export function scaleWidget(metric, { value, onCommit }) {
 }
 
 /** A clock field. */
-export function timeWidget(metric, { value, onCommit }) {
+export function timeWidget(metric, { value, onCommit, onLive }) {
   const input = h("input", {
     class: "time-input",
     type: "time",
     value: value ?? "",
     "aria-label": metric.label,
+    // Picking a time is an answer.
+    onchange: () => onLive?.(input.value || null),
   });
   return {
     el: input,
@@ -263,7 +285,7 @@ export function timeWidget(metric, { value, onCommit }) {
 }
 
 /** Free text, used for the "what did you learn" follow-up. */
-export function textWidget(metric, { value, onCommit }) {
+export function textWidget(metric, { value, onCommit, onLive }) {
   const input = h("textarea", {
     class: "text-input",
     rows: 3,
@@ -278,6 +300,8 @@ export function textWidget(metric, { value, onCommit }) {
       save();
     }
   });
+  // Leaving the note counts as writing it.
+  input.addEventListener("blur", () => onLive?.(input.value.trim() || null));
   return {
     el: input,
     value: () => input.value.trim() || null,

@@ -1,7 +1,7 @@
 [project]
 name = "pulse"
-version = "0.2.0"
-description = "Pulse — a personal performance dashboard. One glance, four rings, one score."
+version = "2.1.0"
+description = "Pulse — a personal performance dashboard. One glance, three rings, one score."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

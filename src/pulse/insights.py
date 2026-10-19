@@ -55,7 +55,6 @@ CONDITIONS: tuple[Condition, ...] = (
     Condition("no_alcohol", "an alcohol-free day", lambda v: not v.get("alcohol")),
     Condition("gym_day", "a gym session", lambda v: bool(v.get("gym"))),
     Condition("read", "10+ min of reading", lambda v: bool(v.get("read"))),
-    Condition("connect", "a real connection", lambda v: bool(v.get("connect"))),
     Condition("learned", "learning something", lambda v: bool(v.get("learned"))),
 )
 

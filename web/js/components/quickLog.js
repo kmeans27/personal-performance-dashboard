@@ -41,6 +41,8 @@ export function openQuickLog({ tile, category, metrics, values, day, suggestion,
     const widget = buildWidget(metric, {
       value: seed,
       onCommit: (answer) => commit(metric.id, answer),
+      // Dragging, tapping or picking settles the answer without a second tap.
+      onLive: (answer) => commit(metric.id, answer, { quiet: true }),
     });
     rows.push({ metric, widget });
     widgets.append(widget.el);
@@ -60,18 +62,15 @@ export function openQuickLog({ tile, category, metrics, values, day, suggestion,
   const close = h("button", { class: "btn btn--quiet", onclick: () => closeQuickLog() }, "Close");
   const done = h("button", { class: "btn btn--primary", onclick: () => closeQuickLog() }, "Done");
   const clear = tile.settled
-    ? h(
-        "button",
-        {
-          class: "btn btn--quiet",
-          onclick: async () => {
-            await commit(fields[0].id, null);
-            closeQuickLog();
-          },
-        },
-        "Clear"
-      )
+    ? h("button", { class: "btn btn--quiet", onclick: () => clearAll() }, "Clear")
     : null;
+
+  async function clearAll() {
+    for (const metric of fields) {
+      await commit(metric.id, null, { quiet: true });
+    }
+    closeQuickLog();
+  }
 
   const sheet = h(
     "section",
@@ -120,12 +119,12 @@ export function openQuickLog({ tile, category, metrics, values, day, suggestion,
   });
   rows[0]?.widget.focus?.();
 
-  async function commit(fieldId, answer) {
+  async function commit(fieldId, answer, { quiet = false } = {}) {
     try {
       const payload = await save(fieldId, answer);
       onSaved?.(payload, tile.id);
       if (!multi) closeQuickLog();
-      else toast("Saved");
+      else if (!quiet) toast("Saved");
     } catch (error) {
       toast(`Not saved: ${error.message}`, "attention");
     }

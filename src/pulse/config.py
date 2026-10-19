@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 
 APP_NAME = "Pulse"
-APP_TAGLINE = "One glance. Four rings. One score."
-APP_VERSION = "0.2.0"
+APP_TAGLINE = "One glance. Three rings. One score."
+APP_VERSION = "2.1.0"
 
 DEFAULT_PORT = 8765
 

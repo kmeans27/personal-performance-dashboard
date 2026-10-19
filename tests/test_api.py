@@ -1,6 +1,6 @@
 def test_schema_exposes_categories_and_fields(client):
     data = client.get("/api/schema").json()
-    assert [c["id"] for c in data["categories"]] == ["body", "mind", "attention", "people"]
+    assert [c["id"] for c in data["categories"]] == ["body", "mind", "attention"]
     assert any(m["id"] == "sleep_hours" for m in data["metrics"])
 
 
@@ -49,7 +49,7 @@ def test_today_works_without_any_data(client):
     data = client.get("/api/today").json()
     assert data["logged"] is False
     assert data["score"]["total"] is None
-    assert len(data["legend"]) == 4
+    assert len(data["legend"]) == 3
 
 
 def test_settings_roundtrip(client):

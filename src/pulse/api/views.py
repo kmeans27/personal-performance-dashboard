@@ -50,6 +50,13 @@ def _number(value: float, digits: int, grouped: bool) -> str:
     return text
 
 
+def _agreed(unit: str, value: float | None) -> str:
+    """One day, two days: the unit agrees with the number it sits beside."""
+    if value is None or not unit.endswith("s") or abs(value) != 1:
+        return unit
+    return unit[:-1]
+
+
 def _display(metric: M.Metric, value: Any) -> tuple[str | None, str]:
     """The value as a person reads it, plus its unit, kept apart for layout."""
     if value is None:
@@ -90,6 +97,7 @@ def _tile_payload(
     metric_scores: dict[str, float],
     weekly: dict[str, dict[str, Any]],
     settings: dict[str, Any],
+    history: dict[str, list[float]] | None = None,
 ) -> dict[str, Any]:
     fields = [M.METRIC_INDEX[f] for f in tile.fields if f in M.METRIC_INDEX]
     primary = fields[0] if fields else None
@@ -100,13 +108,18 @@ def _tile_payload(
     unit = tile.unit or (primary.unit if primary else "")
     sub: str | None = None
     progress: float | None = None
+    goal: float | None = None
+    shown: float | None = None
 
-    if tile.chart == "clock":
+    if tile.chart == "night":
         if answered:
             display = " → ".join(values.get(f.id) or "—" for f in fields)
     elif primary:
         display, _ = _display(primary, values.get(primary.id))
         progress = _progress(primary, values.get(primary.id), metric_scores.get(primary.id), tile.cap)
+        raw = values.get(primary.id)
+        if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+            shown = float(raw)
 
     tracked = bool(card and card.get("tracked"))
     if card and not tracked:
@@ -116,10 +129,19 @@ def _tile_payload(
         note = values.get("learned_what")
         sub = str(note) if note else None
     elif tile.id == "weight":
-        goal = settings.get("weight_goal")
-        if goal:
-            text = _number(float(goal), 0 if float(goal).is_integer() else 1, False)
-            sub = f"Goal {text} kg"
+        raw = settings.get("weight_goal")
+        if raw:
+            goal = float(raw)
+            reading = values.get("weight_kg")
+            if isinstance(reading, (int, float)) and not isinstance(reading, bool):
+                delta = float(reading) - goal
+                if abs(delta) < 0.05:
+                    sub = "At your goal"
+                else:
+                    sub = f"{abs(delta):.1f} kg {'above' if delta > 0 else 'under'} goal"
+            else:
+                text = _number(goal, 0 if goal.is_integer() else 1, False)
+                sub = f"Goal {text} kg"
 
     if card:
         # Weekly fields read as progress toward the week's target, never as a
@@ -128,6 +150,9 @@ def _tile_payload(
             progress = float(card["progress"])
             count = float(card["count"])
             display = _number(count, 0 if count.is_integer() else 1, False)
+            shown = count
+
+    unit = _agreed(unit, shown)
 
     empty = not answered and not tracked
     state = "empty" if empty else (
@@ -135,10 +160,10 @@ def _tile_payload(
     )
 
     filled = 0
-    if tile.chart == "segments" and card and tracked:
+    if tile.chart in ("segments", "blocks") and card and tracked:
         filled = max(0, min(tile.cells, int(round(float(card["count"])))))
-    elif tile.chart == "segments" and answered:
-        filled = 1
+    elif tile.chart in ("segments", "blocks") and answered:
+        filled = min(tile.cells, int(round(float(values.get(primary.id) or 0)))) or 1
 
     caption = "Not logged yet" if empty else (card["caption"] if card else tile.target)
 
@@ -154,6 +179,9 @@ def _tile_payload(
         "chart": tile.chart,
         "size": tile.size,
         "fields": list(tile.fields),
+        # the raw inputs, so a tile can draw its own geometry (a night window,
+        # a position on a track) without asking the server for anything else
+        "values": {f.id: values.get(f.id) for f in fields},
         "weekly": tile.weekly,
         "optional": tile.optional,
         "state": state,
@@ -165,7 +193,25 @@ def _tile_payload(
         "cells": tile.cells,
         "filled": filled,
         "caption": caption,
+        "track": list(tile.track) if tile.track else None,
+        "zone": list(tile.zone) if tile.zone else None,
+        "goal": goal,
+        "series": _series(history, tile, primary),
     }
+
+
+def _series(
+    history: dict[str, list[float]] | None,
+    tile: M.Tile,
+    primary: M.Metric | None,
+) -> list[float] | None:
+    """The last few readings a tile draws from, oldest first."""
+    if not primary or not tile.history:
+        return None
+    values = (history or {}).get(primary.id)
+    if not values:
+        return None
+    return values[-tile.history :]
 
 
 def build_board_payload(
@@ -173,13 +219,19 @@ def build_board_payload(
     score: analytics.DayScore | None,
     weekly: list[dict[str, Any]],
     settings: dict[str, Any] | None = None,
+    entries: Sequence[dict[str, Any]] | None = None,
+    day: str | None = None,
 ) -> dict[str, Any]:
     """Every field as a finished tile: what to draw, what it says, and whether
     the day has an answer for it yet."""
     settings = settings or {}
     metric_scores = (score.metrics if score else {}) or {}
     cards = {card["id"]: card for card in weekly}
-    tiles = [_tile_payload(tile, values, metric_scores, cards, settings) for tile in M.TILES]
+    history = _history(entries or [], day) if day else {}
+    tiles = [
+        _tile_payload(tile, values, metric_scores, cards, settings, history)
+        for tile in M.TILES
+    ]
 
     daily = [t for t in tiles if not t["weekly"] and not t["optional"]]
     logged = len([t for t in daily if t["settled"]])
@@ -189,6 +241,23 @@ def build_board_payload(
         "daily_logged": logged,
         "complete": bool(daily) and logged == len(daily),
     }
+
+
+def _history(entries: Sequence[dict[str, Any]], day: str, span: int = 21) -> dict[str, list[float]]:
+    """Recent values per field, oldest first — a trend line needs a past."""
+    wanted = {field for tile in M.TILES if tile.history for field in tile.fields}
+    if not wanted:
+        return {}
+    start = (date.fromisoformat(day) - timedelta(days=span)).isoformat()
+    out: dict[str, list[float]] = {}
+    for entry in sorted(entries, key=lambda e: e["day"]):
+        if not start <= entry["day"] <= day:
+            continue
+        for field in wanted:
+            value = entry["values"].get(field)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                out.setdefault(field, []).append(round(float(value), 2))
+    return out
 
 
 def build_day_payload(
@@ -219,7 +288,7 @@ def build_day_payload(
         "legend": category_legend(score),
         "focus": focus,
         "weekly": weekly,
-        "board": build_board_payload(values, score, weekly, settings),
+        "board": build_board_payload(values, score, weekly, settings, entries, day),
         "consistency": {
             "days_logged_30": len(logged_recent),
             "days_logged_total": len(entries),

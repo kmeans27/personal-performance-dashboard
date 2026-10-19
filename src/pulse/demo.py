@@ -148,15 +148,13 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
         pickups = int(_clamp(rng.gauss(58, 12) + (screen - 3) * 22, 15, 320) // 5 * 5)
         avoid = rng.random() < (0.92 if phase != "rough" else 0.55)
 
-        connect = rng.random() < (0.72 if not weekend else 0.6)
-
         # ---- outcomes (mood/energy respond to the above, with noise)
         score_seed = (
             3.15
             + (sleep - 7.2) * 0.5
             + (blocks - 2) * 0.22
             - (screen - 4.2) * 0.18
-            + (0.25 if connect else -0.15)
+            + (0.2 if outdoor >= 20 else -0.12)
             + rng.gauss(0, 0.35)
         )
         mood = int(round(_clamp(score_seed, 1, 5)))
@@ -185,7 +183,6 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
             "screen_hours": screen,
             "pickups": pickups,
             "avoid_habit": avoid,
-            "connect": connect,
         }
         if learned:
             values["learned_what"] = LEARNED[index % len(LEARNED)]
@@ -214,7 +211,6 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
             "screen_hours": 2.5,
             "pickups": 44,
             "avoid_habit": True,
-            "connect": True,
         }
     )
 

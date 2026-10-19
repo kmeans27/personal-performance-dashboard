@@ -12,10 +12,10 @@ export const NAV = [
   { href: "/settings", label: "Settings", key: "settings" },
 ];
 
-/** Four arcs, drawn from the product itself rather than a metaphor. */
+/** Three arcs, drawn from the product itself rather than a metaphor. */
 export function brandMark(size = 18) {
-  const radii = [8.2, 6.1, 4, 1.9];
-  const accents = ["var(--body)", "var(--mind)", "var(--attention)", "var(--people)"];
+  const radii = [7.6, 5.1, 2.6];
+  const accents = ["var(--body)", "var(--mind)", "var(--attention)"];
   const centre = size / 2;
   return s(
     "svg",
@@ -68,7 +68,7 @@ export function mountChrome({ active } = {}) {
         "footer",
         { class: "footnote" },
         h("span", {}, "Pulse · self-hosted · your data stays in this folder"),
-        h("span", { class: "num" }, "v0.2.0")
+        h("span", { class: "num" }, "v2.1.0")
       )
     );
   }

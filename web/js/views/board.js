@@ -1,6 +1,6 @@
 /* The board: every field for one day, one screen, nothing to scroll.
-   Rings and the score on the left, the four categories as quadrants on the
-   right. Tap a tile, log it, watch it light up. */
+   Rings and the score on the left, the categories as bands to the right.
+   Tap a tile, log it, watch it light up. */
 
 import { h, mount } from "../core/dom.js";
 import { createRings, microRings } from "../rings.js";
@@ -32,6 +32,7 @@ export function boardView({
   requestAnimationFrame(() => rings.settleNow());
 
   const countLine = h("p", { class: "rail-count" });
+  const meter = h("div", { class: "rail-meter" }, h("i"));
   const focusLine = h("p", { class: "focus", style: { "--accent": "var(--overall)" } });
   const closing = h("p", { class: "rail-closing" });
   const board = h("div", {
@@ -49,6 +50,7 @@ export function boardView({
       { class: "rail-read" },
       h("p", { class: "rail-day" }, demo ? "A lived-in demo" : longDay(payload.day)),
       countLine,
+      meter,
       focusLine,
       closing,
       h(
@@ -89,7 +91,14 @@ export function boardView({
     return h(
       "section",
       { class: "band", "data-category": categoryId, "data-accent": categoryId },
-      h("header", { class: "band-head" }, h("span", { class: "dot" }), h("span", {}, category.label), count),
+      h(
+        "header",
+        { class: "band-head" },
+        h("span", { class: "dot" }),
+        h("span", {}, category.label),
+        h("span", { class: "rule" }),
+        count
+      ),
       grid
     );
   });
@@ -132,6 +141,10 @@ export function boardView({
         : `${boardData.daily_logged} of ${boardData.daily_total} logged today`
     );
     countLine.dataset.complete = String(boardData.complete);
+
+    const ratio = boardData.daily_total ? boardData.daily_logged / boardData.daily_total : 0;
+    meter.firstChild.style.width = `${Math.round(ratio * 100)}%`;
+    meter.dataset.complete = String(boardData.complete);
 
     const focus = next.focus;
     focusLine.dataset.show = focus && !boardData.complete ? "true" : "false";

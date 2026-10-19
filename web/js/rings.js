@@ -4,29 +4,26 @@ import { h, s, mount } from "./core/dom.js";
 import { settle } from "./core/motion.js";
 import { points } from "./core/format.js";
 
-export const RING_ORDER = ["body", "mind", "attention", "people"];
+export const RING_ORDER = ["body", "mind", "attention"];
 
 export const ACCENTS = {
   body: "var(--body)",
   mind: "var(--mind)",
   attention: "var(--attention)",
-  people: "var(--people)",
 };
 
 export const LABELS = {
   body: "Body",
   mind: "Mind",
   attention: "Attention",
-  people: "People",
 };
 
 const VIEW = 320;
 const CENTRE = VIEW / 2;
 const GEOMETRY = [
-  { id: "body", radius: 140, width: 10 },
-  { id: "mind", radius: 112, width: 10 },
-  { id: "attention", radius: 84, width: 10 },
-  { id: "people", radius: 56, width: 10 },
+  { id: "body", radius: 132, width: 13 },
+  { id: "mind", radius: 95, width: 13 },
+  { id: "attention", radius: 58, width: 13 },
 ];
 
 function arc(circle, offset) {
@@ -34,7 +31,7 @@ function arc(circle, offset) {
 }
 
 /**
- * Full composition: four rings, one score in the middle.
+ * Full composition: three rings, one score in the middle.
  * Returns { el, setScores, settleNow }.
  */
 export function createRings({ caption = "", centre = true, className = "rings" } = {}) {
@@ -106,15 +103,12 @@ export function createRings({ caption = "", centre = true, className = "rings" }
   return { el: wrapper, svg, setScores, setCaption, settleNow: () => settle(wrapper) };
 }
 
-/** Four arcs in a 40px square — a day, at calendar size. */
+/** Three arcs in a 40px square — a day, at calendar size. */
 export function microRings(categories = {}, { size = 44, stroke = 3 } = {}) {
   const centre = size / 2;
-  const radii = [
-    size / 2 - stroke / 2 - 1,
-    size / 2 - stroke * 1.75,
-    size / 2 - stroke * 3,
-    size / 2 - stroke * 4.25,
-  ];
+  const outer = size / 2 - stroke / 2 - 1;
+  const gap = stroke * 1.7;
+  const radii = [outer, outer - gap, outer - gap * 2];
   const children = RING_ORDER.map((id, index) => {
     const radius = radii[index];
     const circumference = 2 * Math.PI * radius;

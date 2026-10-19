@@ -26,7 +26,6 @@ def test_rings_cap_at_one():
         screen_hours=0.5,
         pickups=8,
         avoid_habit=True,
-        connect=3,
     )
     history = [make_entry(day_str(i), avoid_habit=True, gym=1) for i in range(1, 15)]
     scores = analytics.build_day_scores(history + [entry])
@@ -88,7 +87,6 @@ def test_focus_line_points_at_the_weakest_ring():
                 read=True,
                 screen_hours=7.5,
                 pickups=200,
-                connect=1,
             )
         ]
     )

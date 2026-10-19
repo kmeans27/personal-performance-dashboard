@@ -2,29 +2,44 @@
 
 **A personal performance dashboard.** Log the handful of things that actually
 matter, once a day, in under thirty seconds — then read the whole day at a
-glance: four rings (Body, Mind, Attention, People) around one score.
+glance: three rings (Body, Mind, Attention) around one score.
 
 Not a habit tracker. An instrument.
 
+## Versions
+
+Newest first. Every release is specified in its own file; the full ledger is in
+[versions.md](versions.md).
+
+| Version | Status | What it did |
+| ------- | ------ | ----------- |
+| [v2.2](v2.2.md) | 🚧 Planned | Log it on the board: drag the knob, tap the block, flip the switch. No sheet. |
+| [v2.1](v2.1.md) | ✅ Shipped | The UI pass. Every field answers again, one field retired, and every chart redrawn in the shape its own data has. Three-band layout, three rings. |
+| [v0.2](v0.2.md) | ✅ Shipped | The board: every field for today on one non-scrolling screen, tap a tile to log it, reachable from your phone. |
+| v0.1 | ✅ Shipped | The loop: one field per screen, scored rings, weekly fields, trends, insights, a 90-day demo. |
+
 ```
-   ╭───────────────╮      BODY               MIND
-   │  ╭─────────╮  │      ▌sleep   ──────     ▌deep blocks ──
-   │  │ ╭─────╮ │  │      ▌steps    ▌gym      ▌learned  ▌read
-   │  │ │ 82  │ │  │      ▌alcohol  ▌greens   ▌mood     ▌energy
-   │  │ ╰─────╯ │  │  ──────────────────────────────────────────
-   │  ╰─────────╯  │      ATTENTION            PEOPLE
-   ╰───────────────╯      ▌screen time ──       ▌real connection ──
-     MONDAY 19 OCT        ▌pickups  ▌stay clean
-     5 of 14 logged
+   ╭───────────────╮   BODY                    MIND
+   │  ╭─────────╮  │   ▌sleep   ──●──         ▌deep blocks ▐▐▐
+   │  │ ╭─────╮ │  │   ▌steps   ▌gym          ▌learned  ▌read
+   │  │ │ 82  │ │  │   ▌alcohol ▌greens      ────────────────────
+   │  │ ╰─────╯ │  │   ▌outdoor ▌creatine     ATTENTION
+   │  ╰─────────╯  │   ▌weight  ▌rhythm       ▌screen ──●── ▌pickups
+   ╰───────────────╯                           ▌stay clean
+     MONDAY 19 OCT
+     5 of 13 logged
 ```
 
 ## Why it exists
 
-- **Logging is the point.** One field per screen, sized to the field type,
-  prefilled with yesterday's value. Each answer fills its ring live.
+- **Logging is the point.** One field per screen in the guided flow, sized to the
+  field type, prefilled with yesterday's value. Each answer fills its ring live.
 - **One glance beats a list.** The board puts every field on one screen — no
   scrolling — sized by how much each one matters, and grouped the way the rings
   are. Rings cap at 100% each, so a strong area can never hide a neglected one.
+- **A shape per field.** A yes/no is drawn as a switch, a band to land in as a
+  band, a count you stack as blocks, a ceiling you stay under as a line you keep
+  left of. The chart is decided by the data, never by taste.
 - **Room to grow, never failure.** No streaks-on-fire, no red screens. Bad days
   are framed as the next thing to try.
 - **Correlation, not cause.** After a few weeks with data, the dashboard says
@@ -57,7 +72,7 @@ The server binds `0.0.0.0` by default, so any device on the same Wi-Fi can open
 it. Start it as usual and it tells you the address:
 
 ```
-  Pulse — One glance. Four rings. One score.
+  Pulse — One glance. Three rings. One score.
   data:  /path/to/.data/pulse.db
   open:  http://localhost:8765
   phone: http://192.168.1.24:8765   ← same Wi-Fi, nothing to install
@@ -76,8 +91,8 @@ PULSE_HOST=127.0.0.1 uv run pulse
 
 | Page        | What it is                                                        |
 | ----------- | ----------------------------------------------------------------- |
-| `/`         | Today: the board — every field on one screen, tap to log in place |
-| `/log`      | The logging flow — one field per screen, live ring feedback       |
+| `/`         | Today: the board — every field on one screen, tap a tile to log it in place |
+| `/log`      | The guided flow — one field per screen, live ring feedback       |
 | `/calendar` | Apple-style score rings per day, tap a day for the full sheet     |
 | `/trends`   | Plain sentences with sparklines, previous window vs this window    |
 | `/insights` | What moves your mood and energy, labelled as correlation           |
@@ -113,14 +128,17 @@ src/pulse/
   api/             FastAPI routers (days, analytics)
 web/
   css/tokens.css   colours, spacing, type scale — the design system
-  css/board.css    the board: bands, tiles, chart types, tile states
+  css/board.css    the board: bands, tiles, the eight chart shapes, tile states
   js/core/         api client, dom helpers, formatting, motion, haptics
   js/rings.js      the ring renderer used by every page
-  js/components/   tile.js (one tile per chart type), quickLog.js, sheet, toast
+  js/components/   tile.js (one tile per shape), quickLog.js, sheet, toast
   js/views/        one small module per page
 ```
 
 Everything is hand-written ES modules — no build step, no npm, no framework.
+
+Adding a field means editing `metrics.py` once: the field, the shape it reads
+best in, its size and its place on the board.
 
 ## Cloudflare-free, analytics-free, yours
 
@@ -128,5 +146,6 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-v0.2.0 — the whole loop works end to end, and the whole day fits one screen:
-log, score, review, learn, from the couch.
+v2.1.0 — the whole loop works end to end, the whole day fits one screen, and
+every field is drawn in the shape its data deserves. Next: [v2.2](v2.2.md),
+answering on the board itself.

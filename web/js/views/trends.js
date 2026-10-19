@@ -64,7 +64,7 @@ export async function renderTrends(app, { source = "api", compact = false, into 
         return;
       }
       const blocks = [
-        rings.length ? section("The four rings", `Compared with the ${state.window} days before.`, trendList(rings)) : null,
+        rings.length ? section("The three rings", `Compared with the ${state.window} days before.`, trendList(rings)) : null,
         signals.length
           ? section("The signals", "The fields that move the rings most.", trendList(compact ? signals.slice(0, 4) : signals))
           : null,

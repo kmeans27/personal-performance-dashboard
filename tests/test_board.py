@@ -22,10 +22,9 @@ FULL_DAY = {
     "screen_hours": 2.5,
     "pickups": 44,
     "avoid_habit": True,
-    "connect": 1,
 }
 
-CHARTS = {"gauge", "bar", "segments", "switch", "scale", "clock", "value"}
+CHARTS = {"range", "bar", "segments", "blocks", "switch", "scale", "night", "trend"}
 
 
 def tiles(client, day=None):
@@ -127,7 +126,62 @@ def test_weight_goal_shows_when_settings_have_one(client):
 
     weight = next(tile for tile in board["tiles"] if tile["id"] == "weight")
     assert weight["display"] == "87.4"
-    assert weight["sub"] == "Goal 82 kg"
+    assert weight["sub"] == "5.4 kg above goal"
+    assert weight["goal"] == 82.0
+
+
+def test_range_tiles_carry_their_axis_and_zone(client):
+    board = tiles(client)
+    sleep = next(tile for tile in board["tiles"] if tile["id"] == "sleep")
+    screen = next(tile for tile in board["tiles"] if tile["id"] == "screen_hours")
+
+    assert sleep["chart"] == "range"
+    assert sleep["track"] == [0, 12]
+    assert sleep["zone"] == [7, 9]
+    assert screen["zone"] == [0, 3]
+
+
+def test_tiles_carry_the_raw_values_they_draw_from(client):
+    day = date.today().isoformat()
+    client.put(f"/api/day/{day}", json={"values": {"bed_time": "22:45", "wake_time": "06:30"}})
+    board = tiles(client)
+
+    rhythm = next(tile for tile in board["tiles"] if tile["id"] == "rhythm")
+    assert rhythm["values"] == {"bed_time": "22:45", "wake_time": "06:30"}
+
+
+def test_weight_trend_carries_recent_history(client):
+    today = date.today()
+    for offset, weight in ((3, 90.0), (2, 89.4), (1, 88.8)):
+        client.put(
+            f"/api/day/{(today - timedelta(days=offset)).isoformat()}",
+            json={"values": {"weight_kg": weight}},
+        )
+    client.put(f"/api/day/{today.isoformat()}", json={"values": {"weight_kg": 88.2}})
+    board = tiles(client)
+
+    weight = next(tile for tile in board["tiles"] if tile["id"] == "weight")
+    assert weight["series"][-1] == 88.2
+    assert len(weight["series"]) == 4
+
+
+def test_a_gauge_with_history_carries_only_its_window(client):
+    today = date.today()
+    # Ten nights of sleep: the sleep tile only draws a week of them.
+    for offset in range(10, 0, -1):
+        client.put(
+            f"/api/day/{(today - timedelta(days=offset)).isoformat()}",
+            json={"values": {"sleep_hours": 6.0 + offset / 10}},
+        )
+    client.put(f"/api/day/{today.isoformat()}", json={"values": {"sleep_hours": 7.5}})
+    board = tiles(client)
+
+    sleep = next(tile for tile in board["tiles"] if tile["id"] == "sleep")
+    assert len(sleep["series"]) == 7
+    assert sleep["series"][-1] == 7.5
+    # Pickups has no history to draw, and says so rather than guessing.
+    pickups = next(tile for tile in board["tiles"] if tile["id"] == "pickups")
+    assert pickups["series"] is None
 
 
 def test_habit_name_from_settings_reaches_the_tile(client):
