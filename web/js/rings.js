@@ -1,0 +1,184 @@
+/* The ring composition — used full size, mini and micro. */
+
+import { h, s, mount } from "./core/dom.js";
+import { settle } from "./core/motion.js";
+import { points } from "./core/format.js";
+
+export const RING_ORDER = ["body", "mind", "attention", "people"];
+
+export const ACCENTS = {
+  body: "var(--body)",
+  mind: "var(--mind)",
+  attention: "var(--attention)",
+  people: "var(--people)",
+};
+
+export const LABELS = {
+  body: "Body",
+  mind: "Mind",
+  attention: "Attention",
+  people: "People",
+};
+
+const VIEW = 320;
+const CENTRE = VIEW / 2;
+const GEOMETRY = [
+  { id: "body", radius: 140, width: 10 },
+  { id: "mind", radius: 112, width: 10 },
+  { id: "attention", radius: 84, width: 10 },
+  { id: "people", radius: 56, width: 10 },
+];
+
+function arc(circle, offset) {
+  circle.setAttribute("stroke-dashoffset", String(offset));
+}
+
+/**
+ * Full composition: four rings, one score in the middle.
+ * Returns { el, setScores, settleNow }.
+ */
+export function createRings({ caption = "", centre = true, className = "rings" } = {}) {
+  const arcs = new Map();
+  const groups = new Map();
+
+  const circles = GEOMETRY.map((geometry) => {
+    const circumference = 2 * Math.PI * geometry.radius;
+    const progress = s("circle", {
+      class: "ring-progress",
+      cx: CENTRE,
+      cy: CENTRE,
+      r: geometry.radius,
+      "stroke-width": geometry.width,
+      "stroke-dasharray": `${circumference} ${circumference}`,
+      "stroke-dashoffset": circumference,
+      transform: `rotate(-90 ${CENTRE} ${CENTRE})`,
+    });
+    arcs.set(geometry.id, { node: progress, circumference });
+    const group = s(
+      "g",
+      { class: "ring", "data-ring": geometry.id, style: { color: ACCENTS[geometry.id] } },
+      s("circle", {
+        class: "ring-track",
+        cx: CENTRE,
+        cy: CENTRE,
+        r: geometry.radius,
+        "stroke-width": geometry.width,
+      }),
+      progress
+    );
+    groups.set(geometry.id, group);
+    return group;
+  });
+
+  const svg = s(
+    "svg",
+    { viewBox: `0 0 ${VIEW} ${VIEW}`, "aria-hidden": "true", focusable: "false" },
+    circles
+  );
+
+  const scoreNode = h("div", { class: "ring-score num", "data-empty": "true" }, "—");
+  const captionNode = h("div", { class: "ring-caption" }, caption);
+  const centreNode = centre ? h("div", { class: "rings-center" }, scoreNode, captionNode) : null;
+  const wrapper = h("div", { class: className }, svg, centreNode);
+
+  function setScores({ total, categories = {}, focus } = {}) {
+    for (const [id, arcRef] of arcs) {
+      const score = categories[id];
+      const offset = score == null ? arcRef.circumference : arcRef.circumference * (1 - score);
+      arc(arcRef.node, offset);
+      const group = groups.get(id);
+      group.dataset.focus = focus === id ? "true" : "false";
+      group.dataset.empty = score == null ? "true" : "false";
+    }
+    const value = total == null ? null : Math.round(total * 100);
+    scoreNode.dataset.empty = value == null ? "true" : "false";
+    mount(
+      scoreNode,
+      value == null ? "Not logged" : value,
+      value == null ? null : h("small", {}, "/100")
+    );
+  }
+
+  function setCaption(text) {
+    captionNode.textContent = text;
+  }
+
+  return { el: wrapper, svg, setScores, setCaption, settleNow: () => settle(wrapper) };
+}
+
+/** Four arcs in a 40px square — a day, at calendar size. */
+export function microRings(categories = {}, { size = 44, stroke = 3 } = {}) {
+  const centre = size / 2;
+  const radii = [
+    size / 2 - stroke / 2 - 1,
+    size / 2 - stroke * 1.75,
+    size / 2 - stroke * 3,
+    size / 2 - stroke * 4.25,
+  ];
+  const children = RING_ORDER.map((id, index) => {
+    const radius = radii[index];
+    const circumference = 2 * Math.PI * radius;
+    const score = categories[id];
+    return s("circle", {
+      class: "ring-progress ring-progress--instant",
+      cx: centre,
+      cy: centre,
+      r: radius,
+      fill: "none",
+      style: { stroke: ACCENTS[id] },
+      "stroke-width": stroke,
+      "stroke-linecap": "round",
+      opacity: score == null ? 0.16 : 1,
+      "stroke-dasharray": `${circumference} ${circumference}`,
+      "stroke-dashoffset": score == null ? circumference : circumference * (1 - score),
+      transform: `rotate(-90 ${centre} ${centre})`,
+    });
+  });
+  return s("svg", { viewBox: `0 0 ${size} ${size}`, width: size, height: size, "aria-hidden": "true" }, children);
+}
+
+/** Single ring: the total score, for the day sheet header. */
+export function totalRing(total, { size = 92, stroke = 8 } = {}) {
+  const centre = size / 2;
+  const radius = centre - stroke / 2 - 1;
+  const circumference = 2 * Math.PI * radius;
+  const value = total ?? 0;
+  return s(
+    "svg",
+    { viewBox: `0 0 ${size} ${size}`, width: size, height: size, "aria-hidden": "true", class: "total-ring" },
+    s("circle", {
+      cx: centre,
+      cy: centre,
+      r: radius,
+      fill: "none",
+      stroke: "rgba(255,255,255,0.08)",
+      "stroke-width": stroke,
+    }),
+    s("circle", {
+      cx: centre,
+      cy: centre,
+      r: radius,
+      fill: "none",
+      style: { stroke: "var(--overall)" },
+      "stroke-width": stroke,
+      "stroke-linecap": "round",
+      "stroke-dasharray": `${circumference} ${circumference}`,
+      "stroke-dashoffset": circumference * (1 - value),
+      transform: `rotate(-90 ${centre} ${centre})`,
+    }),
+    s(
+      "text",
+      {
+        x: centre,
+        y: centre + 1,
+        "text-anchor": "middle",
+        "dominant-baseline": "middle",
+        fill: "var(--ink)",
+        "font-size": size * 0.3,
+        "font-weight": 550,
+        "font-variant-numeric": "tabular-nums",
+      },
+      points(total)
+    )
+  );
+}

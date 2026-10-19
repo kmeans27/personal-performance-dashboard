@@ -1,0 +1,103 @@
+/* Design tokens. Everything visual is decided here. */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- surfaces */
+  --bg: #08090b;
+  --bg-glow: #0d1015;
+  --surface: #0f1216;
+  --surface-2: #14181d;
+  --surface-3: #1a1f25;
+  --line: rgba(255, 255, 255, 0.075);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --shadow-soft: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+
+  /* ---- ink */
+  --ink: #f2f4f7;
+  --ink-2: #a4abb5;
+  --ink-3: #737a85;
+  --ink-4: #4b525c;
+
+  /* ---- one accent per category */
+  --body: #4fe0a9;
+  --mind: #8aa1ff;
+  --attention: #ffb454;
+  --people: #ff7591;
+  --overall: #edf0f4;
+
+  --body-dim: rgba(79, 224, 169, 0.16);
+  --mind-dim: rgba(138, 161, 255, 0.16);
+  --attention-dim: rgba(255, 180, 84, 0.16);
+  --people-dim: rgba(255, 117, 145, 0.16);
+
+  /* ---- type */
+  --font: "Inter var", "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
+  --fs-display: clamp(2.3rem, 8.5vw, 3.15rem);
+  --fs-xl: clamp(1.5rem, 4.4vw, 2rem);
+  --fs-lg: 1.25rem;
+  --fs-md: 1.0625rem;
+  --fs-sm: 0.9375rem;
+  --fs-xs: 0.8125rem;
+  --fs-2xs: 0.6875rem;
+  --tracking-label: 0.14em;
+
+  /* ---- space + shape */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 22px;
+  --s-6: 30px;
+  --s-7: 40px;
+  --s-8: 56px;
+  --s-9: 76px;
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-xl: 34px;
+  --r-full: 999px;
+  --pad-page: clamp(16px, 4vw, 40px);
+  --max-w: 1180px;
+
+  /* ---- motion */
+  --ease-spring: cubic-bezier(0.22, 1.12, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 140ms;
+  --dur-2: 260ms;
+  --dur-3: 460ms;
+  --dur-ring: 900ms;
+}
+
+[data-accent="body"] {
+  --accent: var(--body);
+  --accent-dim: var(--body-dim);
+}
+[data-accent="mind"] {
+  --accent: var(--mind);
+  --accent-dim: var(--mind-dim);
+}
+[data-accent="attention"] {
+  --accent: var(--attention);
+  --accent-dim: var(--attention-dim);
+}
+[data-accent="people"] {
+  --accent: var(--people);
+  --accent-dim: var(--people-dim);
+}
+[data-accent="overall"] {
+  --accent: var(--overall);
+  --accent-dim: rgba(255, 255, 255, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms;
+    --dur-2: 1ms;
+    --dur-3: 1ms;
+    --dur-ring: 1ms;
+  }
+}

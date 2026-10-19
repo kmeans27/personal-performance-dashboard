@@ -1,0 +1,116 @@
+/* The ring composition: four concentric arcs around one score. */
+
+.rings {
+  position: relative;
+  width: min(76vw, 400px);
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+}
+
+.rings svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.045);
+}
+
+.ring-progress {
+  fill: none;
+  stroke-linecap: round;
+  stroke: currentColor;
+  transition: stroke-dashoffset var(--dur-ring) var(--ease-spring),
+    stroke var(--dur-2) var(--ease-out);
+}
+
+.ring[data-focus="true"] .ring-progress {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 60%, transparent));
+  animation: breathe 5.5s var(--ease-inout) infinite;
+}
+
+.ring[data-empty="true"] .ring-track {
+  stroke: rgba(255, 255, 255, 0.03);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring[data-focus="true"] .ring-progress {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------ centre score */
+
+.rings-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.ring-score {
+  font-size: var(--fs-display);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+  color: var(--overall);
+}
+
+.ring-score[data-empty="true"] {
+  font-size: clamp(1.5rem, 6vw, 2rem);
+  color: var(--ink-3);
+  letter-spacing: -0.02em;
+}
+
+.ring-score small {
+  font-size: 0.28em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-4);
+  margin-left: 2px;
+}
+
+.ring-caption {
+  margin-top: var(--s-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------- mini rings */
+
+.rings--mini {
+  width: min(46vw, 180px);
+}
+
+.rings--micro {
+  width: 100%;
+  margin: 0;
+}
+
+.ring-progress--instant {
+  transition: none;
+}
+
+/* The pulse travels from the centre outwards when a day lands. */
+.rings[data-settling="true"] .ring-progress {
+  transition-duration: 1.1s;
+}
