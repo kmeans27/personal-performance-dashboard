@@ -1,18 +1,32 @@
-/* Page entry: Today. */
+/* Page entry: the board. One screen, every field, today. */
 
 import { mountChrome, errorPanel, loadingBlock } from "../core/chrome.js";
 import { api } from "../core/api.js";
-import { dashboardView } from "../views/dashboard.js";
-import { h, mount } from "../core/dom.js";
+import { catalogue } from "../core/catalogue.js";
+import { boardView } from "../views/board.js";
+import { buildSuggestions } from "../views/log.js";
+import { today } from "../core/format.js";
+import { mount } from "../core/dom.js";
 
 const app = document.querySelector("#app");
 mountChrome({ active: "today" });
+document.body.dataset.board = "true";
 
 async function load() {
-  mount(app, loadingBlock([320, 160, 160]));
+  mount(app, loadingBlock([320, 200, 200]));
   try {
-    const [payload, recent] = await Promise.all([api.today(), api.range(14)]);
-    mount(app, dashboardView({ payload, strip: recent.days }));
+    const [schema, payload, recent, prefill] = await Promise.all([
+      catalogue(),
+      api.today(),
+      api.range(7),
+      api.prefill(today()),
+    ]);
+    mount(app, boardView({
+      payload,
+      schema,
+      suggestion: buildSuggestions(schema, prefill),
+      strip: recent.days.slice(-7),
+    }).el);
   } catch (error) {
     mount(app, errorPanel(error.message, load));
   }

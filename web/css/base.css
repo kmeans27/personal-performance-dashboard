@@ -83,7 +83,9 @@ ul {
   display: flex;
   align-items: center;
   gap: var(--s-4);
-  padding: var(--s-3) var(--pad-page);
+  box-sizing: border-box;
+  height: var(--chrome-h);
+  padding: 0 var(--pad-page);
   backdrop-filter: blur(18px) saturate(140%);
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   border-bottom: 1px solid var(--line);

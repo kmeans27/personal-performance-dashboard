@@ -314,6 +314,87 @@ METRICS: tuple[Metric, ...] = (
 METRIC_INDEX = {m.id: m for m in METRICS}
 
 
+# -------------------------------------------------------------------- board
+# How each field is best shown on the one-screen board. It belongs next to the
+# field itself: "what this is" and "how it reads at a glance" are one decision.
+#
+#   chart  gauge    a radial arc for the fields that carry a category
+#          bar      progress toward a target
+#          segments discrete counts, one cell each
+#          switch   done / not done
+#          scale    five felt steps
+#          clock    a time
+#          value    just the number (no target to fill)
+#   size   1 small, 2 medium, 3 large — how much space the field earns
+#   weekly weekly fields wait for the week; they never show a daily zero
+
+
+@dataclass(frozen=True)
+class Tile:
+    id: str
+    category: str
+    chart: str
+    fields: tuple[str, ...]
+    size: int = 1
+    label: str = ""  # falls back to the field's own label
+    target: str = ""
+    unit: str = ""  # falls back to the field's own unit
+    cells: int = 0  # segments only
+    weekly: bool = False
+    optional: bool = False
+    cap: float | None = None  # the value that means "full", when nothing else scores it
+
+
+TILES: tuple[Tile, ...] = (
+    # --------------------------------------------------------------- body
+    Tile("sleep", "body", "gauge", ("sleep_hours",), size=3, target="Target 7–9 h"),
+    Tile("steps", "body", "bar", ("steps",), size=2, target="9,000 steps is the bar"),
+    Tile("gym", "body", "segments", ("gym",), size=2, cells=3, weekly=True, label="Gym this week", unit="sessions"),
+    Tile(
+        "alcohol", "body", "segments", ("alcohol",), size=2, cells=7,
+        weekly=True, label="Alcohol-free", unit="days",
+    ),
+    Tile("greens", "body", "switch", ("greens",), target="Greens or fruit today"),
+    Tile("outdoor", "body", "bar", ("outdoor",), target="20 min outside"),
+    Tile("creatine", "body", "switch", ("creatine",), label="Creatine", target="Daily reminder"),
+    Tile("weight", "body", "value", ("weight_kg",), optional=True, label="Weight", target="Against your goal"),
+    Tile("rhythm", "body", "clock", ("bed_time", "wake_time"), label="Rhythm", target="Bed and wake time"),
+    # --------------------------------------------------------------- mind
+    Tile(
+        "deep_blocks", "mind", "gauge", ("deep_blocks",), size=3,
+        label="Deep blocks", target="Three fills the ring",
+    ),
+    Tile(
+        "learned", "mind", "switch", ("learned", "learned_what"), size=2,
+        label="Learned something", target="The one thing you learned",
+    ),
+    Tile("read", "mind", "switch", ("read",), label="Read 10+ min", target="Ten minutes"),
+    Tile("mood", "mind", "scale", ("mood",), size=2, label="Mood", target="How the day felt"),
+    Tile("energy", "mind", "scale", ("energy",), size=2, label="Energy", target="What was in the tank"),
+    # ---------------------------------------------------------- attention
+    Tile(
+        "screen_hours", "attention", "gauge", ("screen_hours",), size=3,
+        label="Screen time", target="Under 3 h",
+    ),
+    Tile("pickups", "attention", "bar", ("pickups",), target="60 pickups is the bar"),
+    Tile(
+        "avoid_habit", "attention", "bar", ("avoid_habit",), size=2,
+        weekly=True, target="30 days clean", unit="days",
+    ),
+    # ------------------------------------------------------------- people
+    Tile(
+        "connect", "people", "gauge", ("connect",), size=3,
+        label="Real connection", target="One conversation is the bar",
+    ),
+)
+
+TILE_INDEX = {t.id: t for t in TILES}
+
+
+def board_fields() -> set[str]:
+    return {field for tile in TILES for field in tile.fields}
+
+
 def metrics_for(category: str) -> tuple[Metric, ...]:
     return tuple(m for m in METRICS if m.category == category)
 
@@ -424,4 +505,5 @@ def catalogue() -> dict[str, Any]:
         "ring_order": list(INNER_ORDER),
         "metrics": metrics,
         "weekly": [m.id for m in METRICS if m.weekly],
+        "board": [asdict(t) for t in TILES],
     }

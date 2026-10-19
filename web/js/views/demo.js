@@ -1,17 +1,22 @@
-/* Demo: ninety days of believable data, patterns included. */
+/* Demo: ninety days of believable data, shown on the board itself. */
 
 import { h, mount } from "../core/dom.js";
 import { demoApi } from "../core/api.js";
-import { dashboardView } from "./dashboard.js";
+import { catalogue } from "../core/catalogue.js";
+import { boardView } from "./board.js";
 import { renderTrends } from "./trends.js";
 import { renderInsights } from "./insights.js";
-import { pageHeader, section } from "../components/section.js";
+import { pageHeader } from "../components/section.js";
 import { loadingBlock } from "../core/chrome.js";
 
 export async function renderDemo(app) {
   mount(app, loadingBlock([320, 180, 180]));
 
-  const [summary, range] = await Promise.all([demoApi.summary(), demoApi.range(90)]);
+  const [schema, summary, range] = await Promise.all([
+    catalogue(),
+    demoApi.summary(),
+    demoApi.range(90),
+  ]);
   const trendsHost = h("div");
   const insightsHost = h("div");
 
@@ -23,7 +28,7 @@ export async function renderDemo(app) {
       pageHeader({
         title: "A dashboard that has already been lived in",
         note:
-          "Ninety days of believable data: weekend dips, a three-week good streak, one rough week, and a slow drift upward. Nothing here is yours — it is what a full picture looks like.",
+          "Ninety days of believable data: weekend dips, a three-week good streak, one rough week, and a slow drift upward. Nothing here is yours — it is what a full picture looks like. The board below is the same one you get on the home screen, on the last day of that story.",
       }),
       h(
         "div",
@@ -33,7 +38,17 @@ export async function renderDemo(app) {
         h("div", { class: "stat" }, h("p", { class: "stat-label" }, "Direction"), h("p", { class: "stat-value", style: { "font-size": "var(--fs-md)" } }, "Slowly up")),
         h("div", { class: "stat" }, h("p", { class: "stat-label" }, "Logging flow"), h("p", { class: "stat-value", style: { "font-size": "var(--fs-md)" } }, "Under 30 seconds"))
       ),
-      h("div", { class: "section" }, dashboardView({ payload: summary, strip: range.days.slice(-14), demo: true })),
+      h(
+        "div",
+        { class: "section" },
+        boardView({
+          payload: summary,
+          schema,
+          strip: range.days.slice(-7),
+          demo: true,
+          framed: true,
+        }).el
+      ),
       trendsHost,
       insightsHost
     )

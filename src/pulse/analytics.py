@@ -282,18 +282,24 @@ def weekly_progress(
     cards: list[dict[str, Any]] = []
     for metric_id, config in WEEKLY_CARDS.items():
         if metric_id == "avoid_habit":
+            length = 30
             count = sum(
-                1 for d in window(day, 30) if values_by_day.get(d.isoformat(), {}).get(metric_id)
+                1 for d in window(day, length) if values_by_day.get(d.isoformat(), {}).get(metric_id)
             )
         elif config.get("inverse_days"):
             # Alcohol-free is the default, so unlogged days count as clean.
+            length = 7
             count = sum(
                 1 for d in window(day, 7) if not _safe(values_by_day.get(d.isoformat(), {}).get(metric_id))
             )
         else:
+            length = 7
             count = sum(
                 _safe(values_by_day.get(d.isoformat(), {}).get(metric_id)) for d in window(day, 7)
             )
+        # A weekly field nobody has logged in the window is not a zero — it is
+        # simply not being tracked yet, and its tile says so.
+        tracked = any(d.isoformat() in values_by_day for d in window(day, length))
         target = float(settings.get("gym_target") or config["target"]) if metric_id == "gym" else config["target"]
         cards.append(
             {
@@ -303,7 +309,8 @@ def weekly_progress(
                 "count": round(count, 1),
                 "unit": config.get("unit", ""),
                 "progress": round(min(count / max(target, 0.0001), 1.0), 3),
-                "caption": weekly_caption(metric_id, count),
+                "tracked": tracked,
+                "caption": weekly_caption(metric_id, count) if tracked else "Nothing logged yet",
             }
         )
     return cards

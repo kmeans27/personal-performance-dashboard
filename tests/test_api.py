@@ -1,21 +1,3 @@
-import os
-import tempfile
-from pathlib import Path
-
-import pytest
-from fastapi.testclient import TestClient
-
-
-@pytest.fixture()
-def client(monkeypatch):
-    tmp = tempfile.mkdtemp(prefix="pulse-test-")
-    monkeypatch.setenv("PULSE_DB", str(Path(tmp) / "test.db"))
-    from pulse.server import create_app
-
-    with TestClient(create_app()) as test_client:
-        yield test_client
-
-
 def test_schema_exposes_categories_and_fields(client):
     data = client.get("/api/schema").json()
     assert [c["id"] for c in data["categories"]] == ["body", "mind", "attention", "people"]
