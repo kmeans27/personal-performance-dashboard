@@ -14,20 +14,28 @@ Newest first. Every release is specified in its own file; the full ledger is in
 | Version | Status | What it did |
 | ------- | ------ | ----------- |
 | [v2.2](v2.2.md) | 🚧 Planned | Log it on the board: drag the knob, tap the block, flip the switch. No sheet. |
+| [v2.1.1](v2.1.1.md) | ✅ Shipped | The density pass. Nothing stretches to fill the screen: a field is as big as what it holds, in three packed columns, and the left third now carries the category bars, a Mon–Sun week strip and three numbers. |
 | [v2.1](v2.1.md) | ✅ Shipped | The UI pass. Every field answers again, one field retired, and every chart redrawn in the shape its own data has. Three-band layout, three rings. |
 | [v0.2](v0.2.md) | ✅ Shipped | The board: every field for today on one non-scrolling screen, tap a tile to log it, reachable from your phone. |
 | v0.1 | ✅ Shipped | The loop: one field per screen, scored rings, weekly fields, trends, insights, a 90-day demo. |
 
 ```
-   ╭───────────────╮   BODY                    MIND
-   │  ╭─────────╮  │   ▌sleep   ──●──         ▌deep blocks ▐▐▐
-   │  │ ╭─────╮ │  │   ▌steps   ▌gym          ▌learned  ▌read
-   │  │ │ 82  │ │  │   ▌alcohol ▌greens      ────────────────────
-   │  │ ╰─────╯ │  │   ▌outdoor ▌creatine     ATTENTION
-   │  ╰─────────╯  │   ▌weight  ▌rhythm       ▌screen ──●── ▌pickups
-   ╰───────────────╯                           ▌stay clean
-     MONDAY 19 OCT
-     5 of 13 logged
+   ╭──────────────╮   BODY ──────────────────────────────────── 6 / 6
+   │   ╭──────╮   │   ┌────────────────┐ ┌───────┐ ┌────────┐
+   │   │      │   │   │ sleep    ──●── │ │ steps │ │  gym   │
+   │   │  77  │   │   │ ╰────────────╯ │ ├───────┤ ├────────┤
+   │   ╰──────╯   │   ├────────────────┤ │alcohol│ │ greens │
+   │  MON 19 OCT  │   │ weight  ╱╲╱╲   │ ├───────┤ ├────────┤
+   │  12 of 13    │   │ rhythm  ▬▬▬    │ │outdoor│ │creatine│
+   ├──────────────┤   MIND ──────────────────────────────────── 5 / 5
+   │ BODY     89  │   ▐ deep ▐▐▐   learned ────────●   read  ▐
+   │ MIND     58  │   ────────────────────────────────────────────
+   │ ATTENTION 85 │   ATTENTION ───────────────────────────────── 2 / 2
+   ├──────────────┤   ┌────────────────┐ ┌───────┐
+   │ M T W T F S S│   │ screen   ──●── │ │pickups│
+   │ ▁ ▂ ▄ · · · ·│   │ ╰────────────╯ │ └───────┘
+   │ 77  1/7  77  │   └────────────────┘
+   ╰──────────────╯
 ```
 
 ## Why it exists
@@ -35,8 +43,12 @@ Newest first. Every release is specified in its own file; the full ledger is in
 - **Logging is the point.** One field per screen in the guided flow, sized to the
   field type, prefilled with yesterday's value. Each answer fills its ring live.
 - **One glance beats a list.** The board puts every field on one screen — no
-  scrolling — sized by how much each one matters, and grouped the way the rings
-  are. Rings cap at 100% each, so a strong area can never hide a neglected one.
+  scrolling — grouped the way the rings are, and sized to what each field *is*: a
+  yes/no is one small box, a gauge earns two. Rings cap at 100% each, so a strong
+  area can never hide a neglected one.
+- **The day, and the week.** The left third carries the rings, today's three
+  categories as bars, and a Monday-to-Sunday strip with one bar per day — so a
+  single glance answers "how is today" and "how is the week" at once.
 - **A shape per field.** A yes/no is drawn as a switch, a band to land in as a
   band, a count you stack as blocks, a ceiling you stay under as a line you keep
   left of. The chart is decided by the data, never by taste.
@@ -91,7 +103,7 @@ PULSE_HOST=127.0.0.1 uv run pulse
 
 | Page        | What it is                                                        |
 | ----------- | ----------------------------------------------------------------- |
-| `/`         | Today: the board — every field on one screen, tap a tile to log it in place |
+| `/`         | Today: the board — rings, categories and the week on the left, every field on the right, tap a tile to log it in place |
 | `/log`      | The guided flow — one field per screen, live ring feedback       |
 | `/calendar` | Apple-style score rings per day, tap a day for the full sheet     |
 | `/trends`   | Plain sentences with sparklines, previous window vs this window    |
@@ -138,7 +150,7 @@ web/
 Everything is hand-written ES modules — no build step, no npm, no framework.
 
 Adding a field means editing `metrics.py` once: the field, the shape it reads
-best in, its size and its place on the board.
+best in, and the two cells it occupies on the board.
 
 ## Cloudflare-free, analytics-free, yours
 
@@ -146,6 +158,7 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-v2.1.0 — the whole loop works end to end, the whole day fits one screen, and
-every field is drawn in the shape its data deserves. Next: [v2.2](v2.2.md),
-answering on the board itself.
+v2.1.1 — the whole loop works end to end, the whole day fits one screen without
+stretching to fill it, every field is drawn in the shape its data deserves and
+sized to what it holds, and the week is visible from the home screen. Next:
+[v2.2](v2.2.md), answering on the board itself.

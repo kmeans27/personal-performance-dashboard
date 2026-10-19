@@ -177,7 +177,8 @@ def _tile_payload(
         "label": label,
         "category": tile.category,
         "chart": tile.chart,
-        "size": tile.size,
+        "w": tile.w,
+        "h": tile.h,
         "fields": list(tile.fields),
         # the raw inputs, so a tile can draw its own geometry (a night window,
         # a position on a track) without asking the server for anything else
@@ -260,6 +261,25 @@ def _history(entries: Sequence[dict[str, Any]], day: str, span: int = 21) -> dic
     return out
 
 
+def _week(scores: dict[str, analytics.DayScore], day: str) -> list[dict[str, Any]]:
+    """Monday to Sunday around a day — how the week itself has gone."""
+    anchor = date.fromisoformat(day)
+    monday = anchor - timedelta(days=anchor.weekday())
+    out: list[dict[str, Any]] = []
+    for offset in range(7):
+        key = (monday + timedelta(days=offset)).isoformat()
+        score = scores.get(key)
+        out.append(
+            {
+                "day": key,
+                "total": score.total if score else None,
+                "categories": (score.categories if score else {}) or {},
+                "logged": score is not None,
+            }
+        )
+    return out
+
+
 def build_day_payload(
     entries: Sequence[dict[str, Any]],
     scores: dict[str, analytics.DayScore],
@@ -286,6 +306,7 @@ def build_day_payload(
             "coverage": score.coverage if score else 0.0,
         },
         "legend": category_legend(score),
+        "week": _week(scores, day),
         "focus": focus,
         "weekly": weekly,
         "board": build_board_payload(values, score, weekly, settings, entries, day),

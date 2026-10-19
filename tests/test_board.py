@@ -43,8 +43,39 @@ def test_every_field_has_a_home_on_the_board(client):
         assert metric["id"] in covered, f"{metric['id']} is not on the board"
     for tile in board:
         assert tile["chart"] in CHARTS
-        assert 1 <= tile["size"] <= 3
+        assert 1 <= tile["w"] <= 2 and 1 <= tile["h"] <= 2
         assert tile["fields"], f"{tile['id']} draws from no field"
+
+
+def test_every_band_packs_into_full_rows(client):
+    """Three columns, and no band ends on a half-empty row: the board spends
+    its space on fields, never on gaps."""
+    board = client.get("/api/schema").json()["board"]
+
+    for category in ("body", "mind", "attention"):
+        cells = sum(tile["w"] * tile["h"] for tile in board if tile["category"] == category)
+        assert cells > 0
+        assert cells % 3 == 0, f"{category} leaves a half-empty row"
+
+
+def test_the_day_carries_the_week_around_it(client):
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    client.put(f"/api/day/{today.isoformat()}", json={"values": FULL_DAY})
+    payload = client.get("/api/today").json()
+
+    week = payload["week"]
+    assert [entry["day"] for entry in week] == [
+        (monday + timedelta(days=offset)).isoformat() for offset in range(7)
+    ]
+    this_week = week[today.weekday()]
+    assert this_week["logged"] is True
+    assert this_week["total"] == payload["score"]["total"]
+    assert this_week["categories"] == payload["score"]["categories"]
+    # The rest of the week is honestly empty, not a zero.
+    assert all(
+        entry["total"] is None for index, entry in enumerate(week) if index != today.weekday()
+    )
 
 
 def test_board_is_empty_until_something_is_logged(client):

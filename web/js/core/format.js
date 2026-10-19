@@ -43,6 +43,15 @@ export function isToday(day) {
   return day === today();
 }
 
+/** "M", for a week strip — the date next to it carries the rest. */
+export function weekdayInitial(day) {
+  return DAYS_SHORT[parseDay(day).getDay()].slice(0, 1);
+}
+
+export function dayOfMonth(day) {
+  return parseDay(day).getDate();
+}
+
 export function relativeDay(day) {
   const diff = Math.round((parseDay(today()) - parseDay(day)) / 86400000);
   if (diff === 0) return "Today";

@@ -363,7 +363,8 @@ export function createTile(tile, { accent, onOpen } = {}) {
   function update(next) {
     const wasEmpty = el.dataset.state === "empty";
     el.dataset.state = next.state;
-    el.dataset.size = String(next.size);
+    el.dataset.w = String(next.w || 1);
+    el.dataset.h = String(next.h || 1);
     el.dataset.optional = next.optional ? "true" : "false";
     el.setAttribute(
       "aria-label",

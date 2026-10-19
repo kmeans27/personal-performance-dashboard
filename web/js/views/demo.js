@@ -12,10 +12,9 @@ import { loadingBlock } from "../core/chrome.js";
 export async function renderDemo(app) {
   mount(app, loadingBlock([320, 180, 180]));
 
-  const [schema, summary, range] = await Promise.all([
+  const [schema, summary] = await Promise.all([
     catalogue(),
     demoApi.summary(),
-    demoApi.range(90),
   ]);
   const trendsHost = h("div");
   const insightsHost = h("div");
@@ -44,7 +43,6 @@ export async function renderDemo(app) {
         boardView({
           payload: summary,
           schema,
-          strip: range.days.slice(-7),
           demo: true,
           framed: true,
         }).el

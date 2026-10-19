@@ -314,7 +314,9 @@ METRIC_INDEX = {m.id: m for m in METRICS}
 #   night     a window across the day (bed time -> wake time)
 #   trend     a number against its own history (weight)
 #
-#   size    1 small, 2 medium, 3 large — how much space the field earns
+#   w, h    how many columns and rows of the board grid the field takes.
+#           Deliberately small: a yes/no is one cell, a gauge is two by two.
+#           The board spends its pixels on content, not on empty boxes.
 #   track   the axis a range chart draws on: (from, to)
 #   zone    the part of that axis that counts as good
 #   weekly  weekly fields wait for the week; they never show a daily zero
@@ -326,7 +328,8 @@ class Tile:
     category: str
     chart: str
     fields: tuple[str, ...]
-    size: int = 1
+    w: int = 1  # grid columns
+    h: int = 1  # grid rows
     label: str = ""  # falls back to the field's own label
     target: str = ""
     unit: str = ""  # falls back to the field's own unit
@@ -339,16 +342,22 @@ class Tile:
     history: int = 0  # days of recent values a trend chart wants
 
 
+# The spans below pack each band's column count exactly — Body 9 fields into
+# 4 rows of 3, Mind 5 into 2, Attention 3 into 2 — so no band ever ends on a
+# half-empty row. Two fields earn a second column because of what they *are*:
+# a switch with a written note needs the room, and a running number needs a
+# track to run along. Everything else is one cell, which is the point.
+
 TILES: tuple[Tile, ...] = (
     # --------------------------------------------------------------- body
     Tile(
-        "sleep", "body", "range", ("sleep_hours",), size=3,
+        "sleep", "body", "range", ("sleep_hours",), w=2, h=2,
         target="Target 7–9 h", track=(0, 12), zone=(7, 9), history=7,
     ),
-    Tile("steps", "body", "bar", ("steps",), size=2, target="9,000 steps is the bar"),
-    Tile("gym", "body", "segments", ("gym",), size=2, cells=3, weekly=True, label="Gym this week", unit="sessions"),
+    Tile("steps", "body", "bar", ("steps",), target="9,000 steps is the bar"),
+    Tile("gym", "body", "segments", ("gym",), cells=3, weekly=True, label="Gym this week", unit="sessions"),
     Tile(
-        "alcohol", "body", "segments", ("alcohol",), size=2, cells=7,
+        "alcohol", "body", "segments", ("alcohol",), cells=7,
         weekly=True, label="Alcohol-free", unit="days",
     ),
     Tile("greens", "body", "switch", ("greens",), label="Greens", target="Fruit or veg today"),
@@ -361,19 +370,19 @@ TILES: tuple[Tile, ...] = (
     Tile("rhythm", "body", "night", ("bed_time", "wake_time"), label="Rhythm", target="Bed and wake time"),
     # --------------------------------------------------------------- mind
     Tile(
-        "deep_blocks", "mind", "blocks", ("deep_blocks",), size=3, cells=3,
+        "deep_blocks", "mind", "blocks", ("deep_blocks",), cells=3,
         label="Deep blocks", target="Three is a full day",
     ),
     Tile(
-        "learned", "mind", "switch", ("learned", "learned_what"), size=2,
+        "learned", "mind", "switch", ("learned", "learned_what"), w=2,
         label="Learned", target="The one thing you learned",
     ),
     Tile("read", "mind", "switch", ("read",), label="Read", target="Ten minutes"),
-    Tile("mood", "mind", "scale", ("mood",), size=2, label="Mood", target="How the day felt"),
-    Tile("energy", "mind", "scale", ("energy",), size=2, label="Energy", target="What was in the tank"),
+    Tile("mood", "mind", "scale", ("mood",), label="Mood", target="How the day felt"),
+    Tile("energy", "mind", "scale", ("energy",), label="Energy", target="What was in the tank"),
     # ---------------------------------------------------------- attention
     Tile(
-        "screen_hours", "attention", "range", ("screen_hours",), size=3,
+        "screen_hours", "attention", "range", ("screen_hours",), w=2, h=2,
         label="Screen time", target="Under 3 h", track=(0, 8), zone=(0, 3), history=7,
     ),
     Tile(
@@ -381,7 +390,7 @@ TILES: tuple[Tile, ...] = (
         label="Pickups", target="Under 60", track=(0, 150), zone=(0, 60),
     ),
     Tile(
-        "avoid_habit", "attention", "bar", ("avoid_habit",), size=2,
+        "avoid_habit", "attention", "bar", ("avoid_habit",),
         weekly=True, target="30 days clean", unit="days",
     ),
 )

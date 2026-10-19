@@ -1,21 +1,22 @@
 /* The board: every field for one day, one screen, nothing to scroll.
-   Rings and the score on the left, the categories as bands to the right.
-   Tap a tile, log it, watch it light up. */
+   The left third is what the day *means* — rings, the three categories, the
+   week so far and a few honest numbers. The right two thirds are the fields
+   themselves: small, uniform boxes, one per thing you log. Tap a tile, log it,
+   watch it light up. */
 
 import { h, mount } from "../core/dom.js";
-import { createRings, microRings } from "../rings.js";
+import { createRings } from "../rings.js";
 import { createTile } from "../components/tile.js";
 import { openQuickLog } from "../components/quickLog.js";
 import { openDaySheet } from "../components/daySheet.js";
 import { categoryMap, metricMap } from "../core/catalogue.js";
-import { longDay, points } from "../core/format.js";
+import { dayOfMonth, longDay, points, weekdayInitial } from "../core/format.js";
 import { api, demoApi } from "../core/api.js";
 
 export function boardView({
   payload,
   schema,
   suggestion = new Map(),
-  strip = [],
   demo = false,
   framed = false,
   onSelectDay,
@@ -33,37 +34,82 @@ export function boardView({
 
   const countLine = h("p", { class: "rail-count" });
   const meter = h("div", { class: "rail-meter" }, h("i"));
-  const focusLine = h("p", { class: "focus", style: { "--accent": "var(--overall)" } });
-  const closing = h("p", { class: "rail-closing" });
+  const note = h("p", { class: "rail-note" });
+  const catRows = new Map();
+  const weekCells = new Map();
+  const statCells = new Map();
+
   const board = h("div", {
     class: framed ? "board board--framed" : "board",
     "data-complete": "false",
     "data-demo": String(demo),
   });
 
+  /* ------------------------------------------------------------ the rail */
+
+  const cats = h("div", { class: "cats" });
+  for (const categoryId of schema.ring_order) {
+    const fill = h("i");
+    const score = h("span", { class: "cat-score num" }, "—");
+    catRows.set(categoryId, { fill, score });
+    cats.append(
+      h(
+        "div",
+        { class: "cat-row", style: { "--accent": accents.get(categoryId) } },
+        h("span", { class: "cat-label" }, categories.get(categoryId).label),
+        h("span", { class: "cat-bar" }, fill),
+        score
+      )
+    );
+  }
+
+  const week = h("div", { class: "week" });
+  buildWeek();
+
+  const stats = h("div", { class: "rail-stats" });
+  for (const [key, label] of [
+    ["average", "Week average"],
+    ["logged", "Days logged"],
+    ["best", "Best day"],
+  ]) {
+    const value = h("span", { class: "rail-stat-value num" }, "—");
+    statCells.set(key, value);
+    stats.append(
+      h(
+        "div",
+        { class: "rail-stat" },
+        h("span", { class: "rail-stat-label" }, label),
+        value
+      )
+    );
+  }
+
   const rail = h(
     "aside",
     { class: "rail" },
-    rings.el,
+    h("div", { class: "rail-rings" }, rings.el),
     h(
       "div",
       { class: "rail-read" },
       h("p", { class: "rail-day" }, demo ? "A lived-in demo" : longDay(payload.day)),
       countLine,
       meter,
-      focusLine,
-      closing,
-      h(
-        "div",
-        { class: "rail-actions" },
-        demo
-          ? h("a", { class: "btn btn--quiet", href: "/log" }, "Try the logging flow")
-          : h("a", { class: "btn btn--primary", href: `/log?day=${payload.day}` }, "Log everything"),
-        h("a", { class: "btn btn--quiet", href: "/calendar" }, "Calendar")
-      )
+      note
     ),
-    strip.length ? stripNode(strip) : null
+    cats,
+    week,
+    stats,
+    h(
+      "div",
+      { class: "rail-actions" },
+      demo
+        ? h("a", { class: "btn btn--quiet", href: "/log" }, "Try the logging flow")
+        : h("a", { class: "btn btn--primary", href: `/log?day=${payload.day}` }, "Log everything"),
+      h("a", { class: "btn btn--quiet", href: "/calendar" }, "Calendar")
+    )
   );
+
+  /* ---------------------------------------------------------- the fields */
 
   const bands = schema.ring_order.map((categoryId) => {
     const category = categories.get(categoryId);
@@ -103,7 +149,7 @@ export function boardView({
     );
   });
 
-  mount(board, rail, ...bands);
+  mount(board, rail, h("div", { class: "fields" }, ...bands));
   setPayload(payload);
 
   return { el: board, setPayload, tiles };
@@ -124,6 +170,40 @@ export function boardView({
     const next = await api.saveDay(payload.day, { [fieldId]: value });
     setPayload(next);
     return next;
+  }
+
+  /* The week strip is built once — the board never changes the day it shows —
+     then only its bars move when a day gets its score. */
+  function buildWeek() {
+    const fetchDay = demo ? (day) => demoApi.day(day) : (day) => api.day(day);
+    const days = payload.week || [];
+    const track = h(
+      "div",
+      { class: "week-track" },
+      days.map((entry) => {
+        const fill = h("i", { class: "week-fill" });
+        const cell = h(
+          "button",
+          {
+            type: "button",
+            class: "week-cell",
+            "data-today": String(entry.day === payload.day),
+            "data-empty": String(!entry.logged),
+            title: `${longDay(entry.day)} — ${points(entry.total)}`,
+            onclick: () => {
+              openDaySheet(entry.day, { fetchDay });
+              onSelectDay?.(entry.day);
+            },
+          },
+          h("span", { class: "week-letter" }, weekdayInitial(entry.day)),
+          h("span", { class: "week-bar" }, fill),
+          h("span", { class: "week-date num" }, String(dayOfMonth(entry.day)))
+        );
+        weekCells.set(entry.day, { fill, cell });
+        return cell;
+      })
+    );
+    mount(week, h("p", { class: "eyebrow" }, "This week"), track);
   }
 
   function setPayload(next) {
@@ -147,17 +227,41 @@ export function boardView({
     meter.dataset.complete = String(boardData.complete);
 
     const focus = next.focus;
-    focusLine.dataset.show = focus && !boardData.complete ? "true" : "false";
-    if (focus) {
-      focusLine.style.setProperty("--accent", focus.accent);
-      mount(
-        focusLine,
-        h("span", { class: "dot" }),
-        h("span", {}, h("strong", {}, `${focus.category_label}. `), focus.line)
-      );
+    const message = boardData.complete ? next.closing : focus?.line;
+    note.dataset.show = message ? "true" : "false";
+    note.dataset.complete = String(boardData.complete);
+    note.style.setProperty("--accent", focus?.accent || "var(--overall)");
+    mount(
+      note,
+      focus && !boardData.complete ? h("span", { class: "dot" }) : null,
+      message ? h("span", {}, message) : null
+    );
+
+    for (const categoryId of schema.ring_order) {
+      const row = catRows.get(categoryId);
+      const score = next.score.categories?.[categoryId];
+      row.fill.style.width = score == null ? "0%" : `${Math.round(score * 100)}%`;
+      row.score.textContent = points(score);
+      row.score.dataset.empty = String(score == null);
     }
-    closing.textContent = boardData.complete ? next.closing : "";
-    closing.dataset.show = boardData.complete ? "true" : "false";
+
+    for (const entry of next.week || []) {
+      const slot = weekCells.get(entry.day);
+      if (!slot) continue;
+      slot.fill.style.height = entry.logged && typeof entry.total === "number"
+        ? `${Math.max(6, Math.round(entry.total * 100))}%`
+        : "0%";
+      slot.cell.dataset.empty = String(!entry.logged);
+      slot.cell.title = `${longDay(entry.day)} — ${points(entry.total)}`;
+    }
+
+    const logged = (next.week || []).filter((entry) => entry.logged);
+    const totals = logged.map((entry) => entry.total).filter((value) => typeof value === "number");
+    statCells.get("average").textContent = totals.length
+      ? points(totals.reduce((sum, value) => sum + value, 0) / totals.length)
+      : "—";
+    statCells.get("logged").textContent = `${logged.length} of 7`;
+    statCells.get("best").textContent = totals.length ? points(Math.max(...totals)) : "—";
 
     for (const tile of boardData.tiles) {
       tiles.get(tile.id)?.update(tile);
@@ -171,30 +275,5 @@ export function boardView({
       node.parentElement.parentElement.dataset.complete = String(daily.length > 0 && settled === daily.length);
     }
     onPayload?.(next);
-  }
-
-  function stripNode(days) {
-    const fetchDay = demo ? (day) => demoApi.day(day) : (day) => api.day(day);
-    return h(
-      "div",
-      { class: "rail-strip" },
-      days.map((day) =>
-        h(
-          "button",
-          {
-            type: "button",
-            "data-today": String(day.day === payload.day),
-            "data-empty": String(day.total == null),
-            title: `${longDay(day.day)} — ${points(day.total)}`,
-            onclick: () => {
-              openDaySheet(day.day, { fetchDay });
-              onSelectDay?.(day.day);
-            },
-          },
-          microRings(day.categories, { size: 34, stroke: 2.5 }),
-          h("span", { class: "strip-label num" }, day.day.slice(8))
-        )
-      )
-    );
   }
 }

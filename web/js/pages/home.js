@@ -15,17 +15,15 @@ document.body.dataset.board = "true";
 async function load() {
   mount(app, loadingBlock([320, 200, 200]));
   try {
-    const [schema, payload, recent, prefill] = await Promise.all([
+    const [schema, payload, prefill] = await Promise.all([
       catalogue(),
       api.today(),
-      api.range(7),
       api.prefill(today()),
     ]);
     mount(app, boardView({
       payload,
       schema,
       suggestion: buildSuggestions(schema, prefill),
-      strip: recent.days.slice(-7),
     }).el);
   } catch (error) {
     mount(app, errorPanel(error.message, load));

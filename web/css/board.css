@@ -1,58 +1,70 @@
-/* The board: every field for today, one screen, nothing to scroll.
-   Three bands by category, tiles sized by importance, each field drawn in the
-   shape that reads best for it. Quiet until answered, lit when it is. */
+/* The board: every field for today, on one screen, nothing to scroll.
+   Two thirds of it are the fields themselves — small, uniform boxes, one per
+   thing you log, packed so no band ends on a half-empty row. The other third
+   is what the day means: the rings, the three categories, the week so far.
+   Quiet until answered, lit when it is. */
 
 body[data-board="true"] .page {
   max-width: none;
-  padding: 0;
+  min-height: calc(100dvh - var(--chrome-h));
+  display: grid;
+  align-content: center;
+  padding: clamp(12px, 2vh, 26px) clamp(14px, 2vw, 34px);
 }
 
-/* One screen means one screen: no footer pushing the board past the fold. */
+/* Nothing pushes the board past the fold. */
 body[data-board="true"] .footnote {
   display: none;
 }
 
 .board {
-  container: board / size;
-  height: calc(100dvh - var(--chrome-h));
+  width: 100%;
+  max-width: 1512px;
+  margin: 0 auto;
   display: grid;
-  gap: clamp(8px, 1.1vh, 13px);
-  padding: clamp(10px, 1.4vh, 18px) clamp(12px, 1.8vw, 26px) clamp(12px, 1.6vh, 20px);
-  overflow: hidden;
-  grid-template-columns: clamp(200px, 18vw, 268px) minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 5fr) minmax(0, 3fr);
-  grid-template-areas:
-    "rail body mind"
-    "rail body attention";
-  --gap: clamp(6px, 0.85cqh, 10px);
+  grid-template-columns: minmax(280px, 27%) minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(12px, 1.4vw, 22px);
+  /* One tile row. The whole field grid is sized from this, and the board is
+     exactly as tall as its content — never stretched to fill a big screen.
+     (No size containment here: the board must take its height from its
+     fields, and the tiles carry their own container queries.) */
+  --row: clamp(66px, 8.4dvh, 94px);
+  --gap: clamp(5px, 0.85dvh, 9px);
 }
 
 .board--framed {
-  height: min(720px, 86dvh);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);
+  padding: clamp(12px, 1.6vh, 20px);
 }
 
 /* ------------------------------------------------------------------ rail */
 
 .rail {
-  grid-area: rail;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  align-content: start;
-  gap: clamp(10px, 1.6cqh, 20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(9px, 1.5vh, 18px);
+  min-width: 0;
   min-height: 0;
-  overflow: hidden;
 }
 
-.rail .rings {
-  width: min(100%, 244px);
+.rail-rings {
+  flex: 0 1 auto;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.rail-rings .rings {
+  width: min(100%, clamp(148px, 29vh, 292px));
 }
 
 .rail-read {
   display: grid;
-  gap: clamp(7px, 1cqh, 11px);
+  gap: clamp(5px, 0.8vh, 9px);
   justify-items: start;
   min-width: 0;
 }
@@ -69,7 +81,7 @@ body[data-board="true"] .footnote {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: clamp(0.8rem, 1.5cqh, 0.95rem);
+  font-size: var(--fs-xs);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
@@ -108,28 +120,204 @@ body[data-board="true"] .footnote {
   transition: width var(--dur-ring) var(--ease-out);
 }
 
-.rail .focus {
-  max-width: none;
+/* One line of advice when the day is open, one line of credit when it is done. */
+.rail-note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
   font-size: var(--fs-xs);
-  padding: var(--s-3) var(--s-4);
-}
-
-.rail-closing {
-  font-size: var(--fs-xs);
+  line-height: 1.45;
   color: var(--ink-2);
-  max-width: 34ch;
+  max-width: 40ch;
 }
 
-.rail .focus[data-show="false"],
-.rail-closing[data-show="false"] {
+.rail-note .dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+.rail-note[data-show="false"] {
   display: none;
+}
+
+.rail-note[data-complete="true"] {
+  color: var(--ink-3);
+}
+
+/* The three categories, today, as bars — the legend the rings never had. */
+.cats {
+  display: grid;
+  gap: clamp(5px, 0.8vh, 8px);
+  padding-top: clamp(4px, 0.7vh, 8px);
+  border-top: 1px solid var(--line);
+}
+
+.cat-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.cat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cat-bar {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.055);
+  overflow: hidden;
+}
+
+.cat-bar i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--dur-ring) var(--ease-spring);
+}
+
+.cat-score {
+  font-size: 12px;
+  font-weight: 560;
+  text-align: right;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.cat-score[data-empty="true"] {
+  color: var(--ink-4);
+}
+
+/* Monday to Sunday, one bar per day: the week, at a glance. */
+.week {
+  display: grid;
+  gap: clamp(5px, 0.8vh, 8px);
+}
+
+.week-track {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.week-cell {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 5px 0 4px;
+  border-radius: var(--r-sm);
+  color: var(--ink-3);
+  transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+
+.week-cell:hover {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.week-cell[data-today="true"] {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--ink);
+}
+
+.week-letter,
+.week-date {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.week-date {
+  color: var(--ink-4);
+}
+
+.week-cell[data-today="true"] .week-date {
+  color: var(--ink-2);
+}
+
+/* The bar is the day's own score, on its own scale. An empty slot is honest. */
+.week-bar {
+  display: grid;
+  align-content: end;
+  width: min(100%, 22px);
+  height: clamp(28px, 4.4vh, 46px);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.week-cell[data-empty="true"] .week-bar {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.week-fill {
+  display: block;
+  width: 100%;
+  height: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--overall) 62%, transparent);
+  transition: height var(--dur-ring) var(--ease-spring);
+}
+
+.week-cell[data-today="true"] .week-fill {
+  background: var(--overall);
+}
+
+/* Three numbers, honestly: the week's average, how many days have a score,
+   and the best of them. Nothing here can be failed. */
+.rail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+  padding-top: clamp(5px, 0.9vh, 10px);
+  border-top: 1px solid var(--line);
+}
+
+.rail-stat {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rail-stat-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rail-stat-value {
+  font-size: clamp(0.95rem, 2.3vh, 1.15rem);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .rail-actions {
   display: flex;
   gap: var(--s-2);
   flex-wrap: wrap;
-  margin-top: var(--s-1);
 }
 
 .rail-actions .btn {
@@ -137,70 +325,26 @@ body[data-board="true"] .footnote {
   font-size: var(--fs-xs);
 }
 
-.rail-strip {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
-  align-content: end;
-  min-height: 0;
-}
+/* ----------------------------------------------------------------- fields */
 
-.rail-strip button {
-  display: grid;
-  justify-items: center;
-  gap: 3px;
-  padding: 5px 2px;
-  border-radius: var(--r-sm);
-  color: var(--ink-3);
-  transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
 }
-
-.rail-strip button:hover {
-  background: var(--surface-2);
-  color: var(--ink-2);
-}
-
-.rail-strip button[data-today="true"] {
-  background: var(--surface-2);
-  color: var(--ink);
-}
-
-.strip-label {
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.rail-strip button[data-empty="true"] .strip-label {
-  color: var(--ink-4);
-}
-
-/* ------------------------------------------------------------------ bands */
 
 .band {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
   gap: var(--gap);
-  min-height: 0;
-}
-
-.band[data-category="body"] {
-  grid-area: body;
-}
-.band[data-category="mind"] {
-  grid-area: mind;
-}
-.band[data-category="attention"] {
-  grid-area: attention;
+  min-width: 0;
 }
 
 .band-head {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  min-height: 0;
-  font-size: clamp(9px, 1.25cqh, 11px);
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
@@ -246,20 +390,21 @@ body[data-board="true"] .footnote {
 
 .tiles {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: var(--row);
   gap: var(--gap);
-  min-height: 0;
+  min-width: 0;
 }
 
 .tile {
   container: tile / size;
-  grid-row: span 1;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   align-content: center;
-  gap: clamp(3px, 0.7cqh, 8px);
-  padding: clamp(7px, 1.15cqh, 14px) clamp(9px, 1.3cqh, 15px);
+  /* A tile sizes its own insides from the row it sits in — the one length
+     every tile on the board shares. */
+  gap: clamp(2px, calc(var(--row) * 0.04), 6px);
+  padding: clamp(5px, calc(var(--row) * 0.1), 14px) clamp(9px, calc(var(--row) * 0.17), 15px);
   border-radius: var(--r-sm);
   border: 1px solid var(--line);
   background: var(--surface);
@@ -269,13 +414,14 @@ body[data-board="true"] .footnote {
     background var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
 }
 
-/* Importance buys rows: the fields that carry a category get the space. */
-.tile[data-size="2"] {
-  grid-row: span 2;
+/* Two cells wide belongs to a switch with a note or a number with a track.
+   Everything else is one cell, which is the point. */
+.tile[data-w="2"] {
+  grid-column: span 2;
 }
 
-.tile[data-size="3"] {
-  grid-row: span 3;
+.tile[data-h="2"] {
+  grid-row: span 2;
 }
 
 .tile[data-state="empty"] {
@@ -314,7 +460,7 @@ body[data-board="true"] .footnote {
 }
 
 .tile-label {
-  font-size: clamp(8.5px, 3.2cqh, 12px);
+  font-size: clamp(8.5px, 3.4cqh, 11.5px);
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: 0.09em;
@@ -322,6 +468,8 @@ body[data-board="true"] .footnote {
   color: var(--ink-3);
   min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tile[data-state="done"] .tile-label,
@@ -334,7 +482,7 @@ body[data-board="true"] .footnote {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  font-size: clamp(0.95rem, 8.5cqh, 2.7rem);
+  font-size: clamp(0.9rem, 9cqh, 2.2rem);
   font-weight: 560;
   letter-spacing: -0.03em;
   color: var(--ink);
@@ -351,6 +499,12 @@ body[data-board="true"] .footnote {
   color: var(--accent);
 }
 
+@container tile (min-height: 106px) {
+  .tile-value {
+    font-size: clamp(1.2rem, 13cqh, 2.3rem);
+  }
+}
+
 .tile-unit {
   font-size: 0.6em;
   font-weight: 450;
@@ -359,7 +513,7 @@ body[data-board="true"] .footnote {
 }
 
 .tile-caption {
-  font-size: clamp(8.5px, 3cqh, 12px);
+  font-size: clamp(8.5px, 3.2cqh, 11.5px);
   line-height: 1.25;
   color: var(--ink-4);
   overflow: hidden;
@@ -391,7 +545,7 @@ body[data-board="true"] .footnote {
    (screen time, pickups). The knob is where you are; the band is where good is. */
 
 .chart-range {
-  justify-content: center;
+  justify-content: space-between;
   gap: clamp(4px, 2.4cqh, 18px);
   min-height: 0;
 }
@@ -400,14 +554,14 @@ body[data-board="true"] .footnote {
 .range-gauge {
   display: flex;
   flex-direction: column;
-  gap: clamp(5px, 6cqh, 26px);
+  gap: clamp(4px, 5cqh, 24px);
   min-height: 0;
 }
 
 .range-track {
   position: relative;
   width: 100%;
-  height: clamp(5px, 9cqh, 40px);
+  height: clamp(5px, 8cqh, 34px);
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.055);
 }
@@ -416,7 +570,7 @@ body[data-board="true"] .footnote {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  height: clamp(14px, 20cqh, 84px);
+  height: clamp(13px, 19cqh, 74px);
   border-radius: var(--r-xs);
   background: color-mix(in srgb, var(--accent) 30%, transparent);
   box-shadow: inset 1.5px 0 0 color-mix(in srgb, var(--accent) 75%, transparent),
@@ -427,8 +581,8 @@ body[data-board="true"] .footnote {
   position: absolute;
   top: 50%;
   left: 0;
-  width: clamp(12px, 13cqh, 52px);
-  height: clamp(12px, 13cqh, 52px);
+  width: clamp(11px, 12cqh, 46px);
+  height: clamp(11px, 12cqh, 46px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: var(--accent);
@@ -441,7 +595,7 @@ body[data-board="true"] .footnote {
   position: relative;
   display: none;
   height: 11px;
-  font-size: clamp(7.5px, 3.6cqh, 11px);
+  font-size: clamp(7.5px, 3.2cqh, 11px);
   letter-spacing: 0.04em;
   color: var(--ink-4);
   font-variant-numeric: tabular-nums;
@@ -466,7 +620,7 @@ body[data-board="true"] .footnote {
   color: color-mix(in srgb, var(--accent) 72%, var(--ink-3));
 }
 
-@container tile (min-height: 148px) {
+@container tile (min-height: 106px) {
   .range-foot {
     display: block;
   }
@@ -490,7 +644,7 @@ body[data-board="true"] .footnote {
 .bar-track {
   position: relative;
   width: 100%;
-  height: clamp(5px, 4cqh, 26px);
+  height: clamp(5px, 4cqh, 22px);
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.055);
 }
@@ -519,7 +673,7 @@ body[data-board="true"] .footnote {
   display: flex;
   gap: clamp(3px, 0.8cqh, 6px);
   width: 100%;
-  height: clamp(5px, 4cqh, 26px);
+  height: clamp(5px, 4cqh, 22px);
 }
 
 .cell {
@@ -534,7 +688,7 @@ body[data-board="true"] .footnote {
 }
 
 /* ----------------------------------------------------- chart: a stack of blocks */
-/* A big count you stack up: deep blocks. Six fills the tile. */
+/* A big count you stack up: deep blocks. Three fills the tile. */
 
 .chart-blocks {
   justify-content: flex-end;
@@ -552,7 +706,7 @@ body[data-board="true"] .footnote {
 .block {
   flex: 1;
   height: 100%;
-  min-height: clamp(10px, 6cqh, 40px);
+  min-height: clamp(9px, 6cqh, 36px);
   border-radius: var(--r-xs);
   border: 1px dashed var(--line-2);
   background: rgba(255, 255, 255, 0.03);
@@ -574,10 +728,11 @@ body[data-board="true"] .footnote {
 
 .chart-switch {
   justify-content: center;
+  align-items: flex-start;
 }
 
 .pill {
-  --pill-h: clamp(20px, 30cqh, 48px);
+  --pill-h: clamp(17px, 26cqh, 40px);
   --pill-pad: clamp(2px, 0.8cqh, 5px);
   position: relative;
   display: block;
@@ -631,7 +786,7 @@ body[data-board="true"] .footnote {
   align-items: flex-end;
   gap: clamp(3px, 0.8cqh, 7px);
   width: 100%;
-  height: clamp(14px, 12cqh, 64px);
+  height: clamp(13px, 11cqh, 54px);
 }
 
 .scale i {
@@ -656,7 +811,7 @@ body[data-board="true"] .footnote {
 .night-track {
   position: relative;
   width: 100%;
-  height: clamp(6px, 4.4cqh, 26px);
+  height: clamp(6px, 4.2cqh, 22px);
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
@@ -686,13 +841,13 @@ body[data-board="true"] .footnote {
 .night-hours {
   display: flex;
   justify-content: space-between;
-  font-size: clamp(7px, 4.5cqh, 9.5px);
+  font-size: clamp(7px, 3.4cqh, 9.5px);
   letter-spacing: 0.06em;
   color: var(--ink-4);
   font-variant-numeric: tabular-nums;
 }
 
-@container tile (max-height: 78px) {
+@container tile (max-height: 56px) {
   .night-hours {
     display: none;
   }
@@ -704,7 +859,7 @@ body[data-board="true"] .footnote {
 .spark {
   display: block;
   width: 100%;
-  height: clamp(14px, 40cqh, 58px);
+  height: clamp(13px, 30cqh, 52px);
   overflow: visible;
 }
 
@@ -738,20 +893,20 @@ body[data-board="true"] .footnote {
 }
 
 /* The week under a gauge: the same field's last readings, with the good zone
-   still drawn behind them. Only tiles with room to spare get one. */
+   still drawn behind them. Only the two-row gauges have room for one. */
 .spark--mini {
-  height: clamp(14px, 13cqh, 52px);
+  height: clamp(13px, 12cqh, 46px);
 }
 
 .spark-zone {
-  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+  fill: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .chart-range[data-history="false"] .spark--mini {
   display: none;
 }
 
-@container tile (max-height: 147px) {
+@container tile (max-height: 106px) {
   .spark--mini {
     display: none;
   }
@@ -881,132 +1036,137 @@ body[data-board="true"] .footnote {
   margin-top: -12px;
 }
 
-/* Attention is the last three fields, stacked under Mind. */
-@media (min-width: 1025px) {
-  .band[data-category="attention"] .tile[data-size="3"] {
-    grid-row: span 3;
-  }
-}
-
 /* ------------------------------------------------------------- responsive */
 
-/* No room for the week: it lives in the calendar. */
-@media (max-width: 1180px) {
-  .rail-strip {
-    display: none;
+/* Tablet: the rail lifts onto the top as a compact band — rings, the day and
+   its numbers, then the week and the categories beside each other. The fields
+   keep three columns: a field never gets wider than it needs just because it
+   can. */
+@media (max-width: 1024px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr);
+    --row: clamp(62px, 7.8dvh, 86px);
+  }
+  .rail {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "rings read cats"
+      "rings week stats"
+      "actions actions actions";
+    align-items: center;
+    justify-content: normal;
+    gap: var(--s-4) var(--s-5);
+    padding-bottom: var(--s-2);
+  }
+  .rail-rings {
+    grid-area: rings;
+  }
+  .rail-rings .rings {
+    width: clamp(84px, 13vh, 132px);
+  }
+  .rail-read {
+    grid-area: read;
+  }
+  .cats {
+    grid-area: cats;
+  }
+  .week {
+    grid-area: week;
+  }
+  .rail-stats {
+    grid-area: stats;
+  }
+  .rail-actions {
+    grid-area: actions;
+  }
+  .week-bar {
+    height: 30px;
   }
 }
 
-/* Tablet: the rail becomes a header band, the categories keep their columns. */
-@media (max-width: 1024px) {
+/* Phone: everything stacks, and the fields go to two columns. */
+@media (max-width: 700px) {
+  body[data-board="true"] .page {
+    padding: 8px 10px 12px;
+  }
   .board {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 5fr) minmax(0, 3fr);
-    grid-template-areas:
-      "rail rail"
-      "body mind"
-      "body attention";
+    gap: 5px;
+    --row: clamp(58px, 7.2dvh, 78px);
+    --gap: 5px;
   }
   .rail {
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto;
-    align-items: center;
-    gap: var(--s-5);
+    grid-template-areas:
+      "rings read"
+      "cats cats"
+      "week week"
+      "stats stats"
+      "actions actions";
+    gap: var(--s-3) var(--s-4);
   }
-  .rail .rings {
-    width: clamp(56px, 10vh, 100px);
+  .rail-rings .rings {
+    width: clamp(76px, 12vh, 104px);
   }
-  .rail .focus {
+  .rail-note {
     display: none;
   }
-}
-
-/* Phone: the bands stack, each sized by how many rows it holds. */
-@media (max-width: 700px) {
-  .board {
-    gap: 5px;
-    padding: 8px 10px 10px;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 6fr) minmax(0, 3.4fr) minmax(0, 2.2fr);
-    grid-template-areas: "rail" "body" "mind" "attention";
-    --gap: 4px;
-  }
-  .rail {
-    gap: var(--s-3);
-  }
-  .rail-day {
-    font-size: 9px;
-  }
-  .rail-count {
-    font-size: var(--fs-xs);
-  }
-  .rail .focus,
-  .rail-closing,
   .rail-meter {
     display: none;
   }
-  .rail-actions {
-    margin-top: 0;
+  .week-cell {
+    padding: 4px 0 3px;
   }
-  .rail-actions .btn {
-    padding: 5px 12px;
-    font-size: var(--fs-2xs);
+  .week-bar {
+    height: 34px;
   }
-  .band-head {
-    font-size: 8.5px;
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tile[data-tile="deep_blocks"],
+  .tile[data-tile="energy"] {
+    grid-column: span 2;
   }
   .tile {
-    padding: 6px 8px;
+    padding: 6px 9px;
   }
-  /* Importance on a phone is width, not height: the big fields take the row. */
-  .tile[data-size="2"],
-  .tile[data-size="3"] {
-    grid-row: span 1;
-  }
-  .tile[data-size="3"] {
-    grid-column: 1 / -1;
-  }
-  /* Wide and short: the night window and the ranges use the full width. */
-  .tile[data-size="3"] .tile-chart {
-    padding-left: 0;
+  .band-head {
+    font-size: 9px;
   }
 }
 
-/* A short window: keep the values, spend the space on the tiles. */
-@media (max-height: 760px) {
-  .rail-day {
+/* Very narrow: one column of fields, one tile per row. */
+@media (max-width: 460px) {
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tile[data-w="2"],
+  .tile[data-tile="deep_blocks"],
+  .tile[data-tile="energy"] {
+    grid-column: span 1;
+  }
+}
+
+/* A short window: keep the fields, spend the space on nothing else. */
+@media (max-height: 700px) {
+  .rail-rings .rings {
+    width: clamp(120px, 24vh, 200px);
+  }
+  .rail-note {
     display: none;
-  }
-  .rail-closing {
-    display: none;
-  }
-  .rail .rings {
-    width: clamp(56px, 11vh, 104px);
-  }
-  .band-head {
-    font-size: 8px;
-  }
-  .tile {
-    padding: 4px 8px;
-  }
-  .tile-value {
-    font-size: clamp(0.85rem, 24cqh, 1.3rem);
   }
 }
 
 /* Tiles answer to their own size, not the window's: a short tile drops the
    caption first, then the decorative chart, and always keeps the number. */
-@container tile (max-height: 64px) {
+@container tile (max-height: 44px) {
   .tile-caption {
     display: none;
   }
 }
 
-@container tile (max-height: 40px) {
-  .tile--bar .tile-chart,
-  .tile--segments .tile-chart,
-  .tile--scale .tile-chart,
-  .tile--blocks .tile-chart {
+@container tile (max-height: 36px) {
+  .tile-chart {
     display: none;
   }
 }
@@ -1017,6 +1177,6 @@ body[data-board="true"] .footnote {
     display: none;
   }
   .tile-value {
-    font-size: clamp(0.85rem, 26cqh, 1.35rem);
+    font-size: clamp(0.85rem, 26cqh, 1.25rem);
   }
 }
