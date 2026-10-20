@@ -8,14 +8,14 @@ Not a habit tracker. An instrument.
 
 ## Versions
 
-Pulse is built in passes, and the passes stack. **Latest: v2.2.4 — desktop
-fill.** Next: **v2.3 — the phone.**
+Pulse is built in passes, and the passes stack. **Latest: v2.2.5 — the board
+answers.** Next: **v2.3 — the phone.**
 
 | Pass | What it changed |
 | ---- | --------------- |
 | [0.1 – 0.2](docs/versions/v0.2.md) | The loop, then the board: the scoring, and every field for today on one non-scrolling screen, answered in place. |
 | [2.1 – 2.1.2](docs/versions/v2.1.md) | The interface: a shape per field, the density pass, and the one-screen home rework — rail, three category columns, score bar. |
-| [2.2 – 2.2.4](docs/versions/v2.2.4.md) | The editor and the desktop passes: answer on the card, open it for the exact answer, and keep the board to one screen — a rail that stacks, notes on their own row, a score bar grouped by category, and a column that fills the height it has. |
+| [2.2 – 2.2.5](docs/versions/v2.2.5.md) | The editor and the desktop passes: answer on the card, open it for the exact answer, and keep the board to one screen — a rail that stacks, notes on their own row, a score bar grouped by category, a column that fills the height it has, and a board that answers while you drag. |
 | 2.3 (next) | The phone: logging first, a dashboard built for glass, undo. |
 | 2.4 – 3.1 (planned) | Yours: card settings, the layout builder, the polish. |
 
@@ -180,22 +180,22 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-**v2.2.4 — desktop fill.** The whole day still fits one screen at 1440×900
-without scrolling, and now it fills it. The board is three category columns;
-a column is a stack of rows, a row is a pair of cards, and every category has
-its own plan for how tall its rows are. Mind and Attention no longer end
-hundreds of pixels above the score bar: the track thickens, the deep blocks
-and the mood chips grow, the clean grid takes its card, and the note that
-opens under Read, Learned or Main task takes its height from the rows around
-it — never from the bar. Tablet and phone keep the content-sized layout, and
-the growth is capped, so a tall window leaves the room below the board rather
-than turning every card into a billboard.
+**v2.2.5 — the board answers.** The board answers while you work, not after
+you finish. Dragging a rail moves the number with the pointer — the hours,
+the minutes, the clock — and the line of words under the card shows the
+target until the write lands and the server's own sentence after it. One
+write per drag. Mood and Energy now draw the same ladder as the detail
+editor: five bars on a hairline, the word under each, the usual marked on the
+line. And an answer fills the space its card has, which is what the Main
+task card in the Attention column needed.
 
-The v2.2.3 rail is unchanged: the larger ring, yesterday and usual, the three
-next best moves, the week and a Sources card that stays only until both
-imports are live. Main task is a scored switch, notes open as a full-width
-row, mood and energy are one row of chips, the score bar is grouped by
-category, and a perfect day gets one slow light sweep.
+v2.2.4 gave the board its height back: the columns fill the screen, each
+category has its own row plan, and a note opening under a pair takes its
+height from the rows around it. The v2.2.3 rail is unchanged: the larger
+ring, yesterday and usual, the three next best moves, the week and a Sources
+card that stays only until both imports are live. Tablet and phone keep the
+content-sized layout, and the growth is capped, so a tall window leaves the
+room below the board rather than turning every card into a billboard.
 
 This is the basis everything else builds on: the board, the scoring and the
 instrument catalogue — now with Main task — are settled, and the next passes

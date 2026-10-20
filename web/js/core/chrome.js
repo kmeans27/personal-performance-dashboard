@@ -68,7 +68,7 @@ export function mountChrome({ active } = {}) {
         "footer",
         { class: "footnote" },
         h("span", {}, "Pulse · self-hosted · your data stays in this folder"),
-        h("span", { class: "num" }, "v2.2.4")
+        h("span", { class: "num" }, "v2.2.5")
       )
     );
   }

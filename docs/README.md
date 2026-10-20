@@ -16,7 +16,7 @@ Every shipped release from v0.2 on has one file in [versions](versions/), writte
 the week it shipped and left alone afterwards. Each opens with the same block:
 
 ```
-**Status: shipped.** `2.2.4`
+**Status: shipped.** `2.2.5`
 ```
 
 then a paragraph saying what the release changed, then the detail. They are

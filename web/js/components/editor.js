@@ -10,28 +10,13 @@
    Everything saves live. There is no Save button to forget; Done just closes. */
 
 import { h, mount, s } from "../core/dom.js";
+import { digitsFor, formatNumber } from "../core/format.js";
 
 const clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value));
 const numeric = (value) => (typeof value === "number" && Number.isFinite(value) ? value : null);
 const tidy = (value) => Number(Number(value).toFixed(4));
 
-function digitsFor(step) {
-  if (!step || step >= 1) return 0;
-  return step < 0.11 ? 1 : 2;
-}
-
 const roundTo = (value, step) => tidy(Math.round(value / (step || 1)) * (step || 1));
-
-/** 7.5 -> "7.5", 11234 -> "11,234", 87.1 -> "87.1". */
-function formatNumber(value, step, id) {
-  if (value == null) return "—";
-  const number = Number(value);
-  if (!Number.isFinite(number)) return "—";
-  if (id === "steps") return Math.round(number).toLocaleString("en-US");
-  const digits = digitsFor(step);
-  const fixed = number.toFixed(digits);
-  return digits ? fixed.replace(/0+$/, "").replace(/\.$/, "") : fixed;
-}
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

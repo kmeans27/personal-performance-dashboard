@@ -7,7 +7,7 @@
                        caller can save it without a second tap */
 
 import { h } from "../core/dom.js";
-import { round } from "../core/format.js";
+import { digitsFor, round } from "../core/format.js";
 import { haptic } from "../core/motion.js";
 
 const TOGGLE_WORDS = {
@@ -16,14 +16,9 @@ const TOGGLE_WORDS = {
   default: ["Yes", "No"],
 };
 
-function digitsFor(metric) {
-  if (!metric.step || metric.step >= 1) return 0;
-  return metric.step < 0.11 ? 1 : 2;
-}
-
 export function displayNumber(metric, value) {
   if (value == null) return "—";
-  const digits = digitsFor(metric);
+  const digits = digitsFor(metric.step);
   const number = round(Number(value), digits);
   return metric.id === "steps" ? Number(number).toLocaleString("en-US") : String(number);
 }

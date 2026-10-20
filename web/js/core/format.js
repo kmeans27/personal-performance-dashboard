@@ -73,6 +73,23 @@ export function round(value, digits = 0) {
   return Math.round(value * factor) / factor;
 }
 
+/** How many decimals a field's step asks for: 0.25 -> 2, 0.05 -> 1, 1 -> 0. */
+export function digitsFor(step) {
+  if (!step || step >= 1) return 0;
+  return step < 0.11 ? 1 : 2;
+}
+
+/** 7.5 -> "7.5", 11234 -> "11,234", 87.1 -> "87.1". */
+export function formatNumber(value, step, id) {
+  if (value == null) return "—";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  if (id === "steps") return Math.round(number).toLocaleString("en-US");
+  const digits = digitsFor(step);
+  const fixed = number.toFixed(digits);
+  return digits ? fixed.replace(/0+$/, "").replace(/\.$/, "") : fixed;
+}
+
 export function compactNumber(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return "—";

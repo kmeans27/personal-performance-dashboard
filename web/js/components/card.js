@@ -5,7 +5,8 @@
    The instrument is decided by the catalogue in `metrics.py`, never here: a
    card only knows how to draw the shape it was handed. */
 
-import { h, mount, s } from "../core/dom.js";
+import { h, s } from "../core/dom.js";
+import { formatNumber } from "../core/format.js";
 
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
@@ -75,13 +76,12 @@ function checkMark() {
 
 /** A value on a track: a zone to land in, a marker for today, a tick for
     yesterday. Dragging the track sets the value. Also the plain bar. */
-function scaleInstrument(tile, { save, locked }) {
+function scaleInstrument(tile, { save, locked, onPreview, onHold }) {
   const isBar = tile.chart === "bar";
   const lo = tile.track ? tile.track[0] : 0;
   const hi = tile.track ? tile.track[1] : Math.round((tile.target || 1) * 1.5);
   const step = tile.step || (hi <= 20 ? 0.5 : 1);
   const zone = tile.zone;
-  const digits = step < 0.11 ? 1 : 0;
 
   const zoneEl = h("span", { class: "ins-zone" });
   const fill = h("span", { class: "ins-fill" });
@@ -142,7 +142,11 @@ function scaleInstrument(tile, { save, locked }) {
 
   const preview = (raw) => {
     value = raw;
+    el.setAttribute("aria-valuenow", String(raw));
+    el.setAttribute("aria-valuetext", `${raw}${tile.unit ? ` ${tile.unit}` : ""}`);
     paint();
+    // The number follows the pointer, before anything is written.
+    onPreview?.(formatNumber(raw, step, tile.id));
   };
 
   const nudge = (direction) => {
@@ -159,9 +163,11 @@ function scaleInstrument(tile, { save, locked }) {
       (event) => {
         const raw = roundTo(valueFromEvent(track, event, lo, hi), step);
         current = Math.max(lo, Math.min(hi, raw));
+        onHold?.(true);
         preview(current);
       },
       () => {
+        onHold?.(false);
         if (typeof current === "number") save({ [tile.fields[0]]: current });
       }
     );
@@ -304,46 +310,50 @@ function switchInstrument(tile, { save, locked }) {
   return { el, set };
 }
 
-/** A felt 1–5: five steps, with a tick where your usual sits. */
-function scaleStepsInstrument(tile, { save, locked }) {
+/** A felt 1–5: five bars standing on a hairline, the word under each, the
+    usual marked on the line. The same ladder the detail editor draws. */
+function ladderInstrument(tile, { save, locked }) {
   const metric = tile.cells || 5;
   const low = tile.min ?? 1;
   const labels = tile.labels || [];
-  const steps = [];
-  const row = h("div", { class: "ins-steps" });
+  // The editor's ladder: each bar a little taller than the one before it.
+  const shares = [0.17, 0.38, 0.58, 0.79, 1];
+  const rungs = [];
+  const row = h("div", { class: "ladder" });
   for (let index = 0; index < metric; index += 1) {
     const value = low + index;
-    const step = h(
+    const rung = h(
       "button",
       {
         type: "button",
-        class: "step",
+        class: "ladder-rung",
         "data-step": String(value),
         "aria-label": labels[index] || String(value),
         onclick: locked ? undefined : () => save({ [tile.fields[0]]: value }),
       },
-      h("i"),
-      h("span", {}, labels[index] || String(value))
+      h("span", { class: "ladder-bar", style: { "--share": String(shares[index] ?? 1) } }),
+      h("span", { class: "ladder-word" }, labels[index] || String(value))
     );
-    steps.push(step);
-    row.append(step);
+    rungs.push(rung);
+    row.append(rung);
   }
+  const usual = h("span", { class: "ladder-usual" });
   const el = h(
     "div",
-    { class: "ins ins--steps" },
+    { class: "ins ins--ladder" },
     tile.prompt ? h("p", { class: "ins-prompt" }, tile.prompt) : null,
-    row
+    h("div", { class: "ladder-wrap" }, row, usual)
   );
 
   function set(next) {
     const raw = Number(next.values?.[next.fields[0]]);
     const filled = Number.isFinite(raw) ? raw : null;
-    steps.forEach((step, index) => {
-      step.dataset.filled = filled != null && index < Math.round(filled) ? "true" : "false";
-      step.dataset.on = filled != null && index === Math.round(filled) - low ? "true" : "false";
-      step.dataset.usual =
-        typeof next.usual === "number" && Math.round(next.usual) - low === index ? "true" : "false";
+    rungs.forEach((rung, index) => {
+      rung.dataset.on = filled != null && index === Math.round(filled) - low ? "true" : "false";
     });
+    const mark = typeof next.usual === "number" ? Math.round(next.usual) - low : null;
+    usual.hidden = mark == null || mark < 0 || mark >= metric;
+    if (!usual.hidden) usual.style.left = `${((mark + 0.5) / metric) * 100}%`;
   }
 
   set(tile);
@@ -353,7 +363,7 @@ function scaleStepsInstrument(tile, { save, locked }) {
 /** The evening: 21:00 to 02:00, the hours most people actually get to bed.
     You enter one thing — when you lay down. The hour you got up is worked out
     from how long you slept, so there is never a second clock to keep. */
-function bedInstrument(tile, { save, locked }) {
+function bedInstrument(tile, { save, locked, onPreview, onHold }) {
   const START = 21 * 60; // 21:00
   const SPAN = 5 * 60; // 02:00
   const zone = h("span", { class: "bed-zone" });
@@ -434,9 +444,15 @@ function bedInstrument(tile, { save, locked }) {
       (event) => {
         const raw = valueFromEvent(track, event, START, START + SPAN);
         value = ((Math.round(raw / 15) * 15) % 1440 + 1440) % 1440;
+        onHold?.(true);
         paint();
+        // The clock follows the pointer, before anything is written.
+        onPreview?.(clockOf(value));
       },
-      settle
+      () => {
+        onHold?.(false);
+        settle();
+      }
     );
 
     el.addEventListener("keydown", (event) => {
@@ -519,7 +535,7 @@ function instrumentFor(tile, options) {
     case "switch":
       return switchInstrument(tile, options);
     case "scale":
-      return scaleStepsInstrument(tile, options);
+      return ladderInstrument(tile, options);
     case "bedtime":
       return bedInstrument(tile, options);
     case "range":
@@ -532,7 +548,9 @@ function instrumentFor(tile, options) {
 
 export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}) {
   const label = h("span", { class: "card-label" }, tile.label);
-  const value = h("span", { class: "card-value num" });
+  const number = h("span", { class: "card-number" });
+  const unit = h("small", { class: "card-unit" });
+  const value = h("span", { class: "card-value num" }, number, unit);
   const points = h("span", { class: "card-points num" });
   const gap = h("p", { class: "card-gap" });
   const headRow = h("span", { class: "card-head-row" }, label, points);
@@ -552,9 +570,21 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
     valueRow
   );
 
+  /* While a slider is held, the card shows the value under the pointer and
+     the target it is heading for. The server's own sentence comes back when
+     the pointer is let go and the write has landed. */
+  let held = false;
   const options = {
     locked,
     save: (values) => onSave?.(values),
+    onPreview: (text) => {
+      number.textContent = text;
+    },
+    onHold: (state) => {
+      if (held === state) return;
+      held = state;
+      gap.textContent = state ? tile.target_label || "" : gap.dataset.answer || "";
+    },
   };
   const instrument = instrumentFor(tile, options);
 
@@ -574,10 +604,8 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
   );
 
   function setValue(next) {
-    value.textContent = next.display == null ? "—" : next.display;
-    if (next.unit && next.display != null) {
-      value.append(h("small", { class: "card-unit" }, next.unit));
-    }
+    number.textContent = next.display == null ? "—" : next.display;
+    unit.textContent = next.unit && next.display != null ? next.unit : "";
   }
 
   function update(next) {
@@ -617,7 +645,8 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
       points.append(h("small", {}, "/10"));
     }
 
-    gap.textContent = next.gap;
+    gap.dataset.answer = next.gap;
+    if (!held) gap.textContent = next.gap;
     gap.dataset.state = next.state;
 
     if (wasEmpty && next.display != null) {

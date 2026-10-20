@@ -564,6 +564,10 @@ body[data-board="true"] .footnote {
   color: var(--ink-3);
 }
 
+.card-unit:empty {
+  display: none;
+}
+
 .card-check {
   width: 13px;
   height: 13px;
@@ -925,12 +929,12 @@ body[data-board="true"] .footnote {
   color: #0a0b0d;
 }
 
-/* ---- a felt 1–5: one row of five chips, the usual ticked ---------------- */
+/* ---- a felt 1–5: five bars on a hairline, the word under each ----------- */
 
-.ins--steps {
+.ins--ladder {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 4px;
-  width: 100%;
 }
 
 .ins-prompt {
@@ -939,77 +943,103 @@ body[data-board="true"] .footnote {
   color: var(--ink-3);
 }
 
-.ins-steps {
-  display: flex;
-  gap: clamp(3px, 0.4vw, 6px);
-  width: 100%;
-  height: 30px;
-}
-
-.step {
+.ladder-wrap {
   position: relative;
-  flex: 1;
+  min-height: 0;
+}
+
+.ladder {
   display: flex;
+  align-items: flex-end;
+  gap: clamp(4px, 0.6vw, 10px);
+  height: 88px;
+}
+
+/* A hairline where the bars stand: the ladder reads as a chart, not a row
+   of buttons. */
+.ladder-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  height: 1px;
+  background: var(--line);
+}
+
+.ladder-rung {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  gap: 8px;
+  height: 100%;
   min-width: 0;
-  padding: 0 4px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.035);
+  padding: 0;
+  border: 0;
+  background: none;
   cursor: pointer;
-  transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out),
-    color var(--dur-2) var(--ease-out);
 }
 
-.step i {
-  display: none;
+.ladder-rung:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 4px;
+  border-radius: var(--r-xs);
 }
 
-.step span {
+.ladder-bar {
+  width: 100%;
+  max-width: 78px;
+  height: calc((100% - 26px) * var(--share, 1));
+  min-height: 8px;
+  border-radius: 10px 10px 6px 6px;
+  background: rgba(255, 255, 255, 0.07);
+  transition: background var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.ladder-rung:hover .ladder-bar {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ladder-rung[data-on="true"] .ladder-bar {
+  background: var(--accent);
+  box-shadow: 0 0 26px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.ladder-word {
   font-size: 11.5px;
   line-height: 1;
-  text-align: center;
   color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.step[data-filled="true"] {
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
-  background: color-mix(in srgb, var(--accent) 17%, transparent);
-}
-
-.step[data-filled="true"] span {
+.ladder-rung:hover .ladder-word {
   color: var(--ink-2);
 }
 
-.step[data-on="true"] {
-  border-color: transparent;
-  background: var(--accent);
+.ladder-rung[data-on="true"] .ladder-word {
+  color: var(--ink);
+  font-weight: 600;
 }
 
-.step[data-on="true"] span {
-  color: #0a0b0d;
-  font-weight: 650;
-}
-
-.step:hover {
-  border-color: var(--line-2);
-}
-
-/* Your usual, as a tick above the chip it sits on. */
-.step[data-usual="true"]::before {
-  content: "";
+/* Where your usual sits, on the line the bars stand on. */
+.ladder-usual {
   position: absolute;
-  top: -5px;
-  left: 50%;
-  width: 10px;
-  height: 2px;
+  bottom: 22px;
+  width: 2px;
+  height: 8px;
   border-radius: 1px;
   transform: translateX(-50%);
   background: var(--ink-3);
+}
+
+.ladder-usual[hidden] {
+  display: none;
 }
 
 /* ---- the evening: 21:00 to 02:00, a single hour to place ---------------- */
@@ -1441,7 +1471,7 @@ body[data-board="true"] .footnote {
     font-size: 10px;
   }
 
-  .step span {
+  .ladder-word {
     font-size: 10.5px;
   }
 }
@@ -1608,7 +1638,7 @@ body[data-board="true"] .footnote {
   }
 
   body[data-board="true"] .ins-mark {
-    height: clamp(15px, 92%, 54px);
+    height: clamp(18px, 105%, 56px);
   }
 
   /* The small counts: a row of ticks that fills its card. */
@@ -1623,22 +1653,28 @@ body[data-board="true"] .footnote {
     min-height: 36px;
   }
 
-  /* A yes/no keeps its 44 px buttons and sits at the top of the card: the
-     extra height stays in the stage, never in the buttons. */
+  /* A yes/no answers in the space the card has: the buttons fill the stage,
+     from 44 px up. The pairs (Read/Learned, Greens/Creatine) have a 44 px
+     stage and keep their 44 px buttons; the full-width Main task card has
+     room, and uses it. */
   body[data-board="true"] .ins--switch {
-    align-self: start;
-    height: 44px;
+    align-self: stretch;
+    height: auto;
+    min-height: 44px;
   }
 
-  /* A felt 1–5: the prompt above, five chips that grow — but stay chips. */
-  body[data-board="true"] .ins--steps {
-    grid-template-rows: auto auto;
-    align-content: center;
+  body[data-board="true"] .choice {
+    height: auto;
+    min-height: 44px;
   }
 
-  body[data-board="true"] .ins-steps {
-    height: 60px;
-    align-self: center;
+  /* A felt 1–5: the ladder takes the height the card has. */
+  body[data-board="true"] .ins--ladder {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  body[data-board="true"] .ladder {
+    height: 100%;
   }
 
   /* The evening: the night strip takes the height, the hours stay small. */

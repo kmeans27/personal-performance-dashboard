@@ -27,6 +27,7 @@ as it is today.
 
 | Version | Name | What it changed |
 | ------- | ---- | --------------- |
+| [v2.2.5](v2.2.5.md) | The board answers | The number on a card follows the pointer while a rail is held, and the line of words shows the target until the write lands. Mood and energy draw the editor's ladder, and the answer on a card fills the space the card has. |
 | [v2.2.4](v2.2.4.md) | Desktop fill | The columns fill the height they have. A column is a stack of rows, a row is a pair of cards, and every category has its own plan for how tall its rows are: the track thickens, the blocks and chips grow, the clean grid takes its card, and the note under a pair takes its height from the rows around it. |
 | [v2.2.3](v2.2.3.md) | Desktop polish | The rail stacks everything it has, including a Sources card that stays only until both imports are live; Main task joins Attention; notes open as a row of their own; mood and energy become one row of chips; the score bar groups by category; and a perfect day gets one quiet moment. |
 | [v2.2.2](v2.2.2.md) | The instrument opens | The detail sheet rebuilt around its value: the big number is the input, one sentence of status, and a recessed stage holding the control made for the field — gauge, goal-centred weight scale, five-bar ladder, doors, seven-day mixer, thirty-day grid, night strip. |
@@ -88,5 +89,6 @@ to the surface where a stray tap actually happens.
 | [v2.2.2.md](v2.2.2.md) | The instrument opens: the rebuilt editor — hero value, status line, a control per field. |
 | [v2.2.3.md](v2.2.3.md) | Desktop polish: the rail that stacks, notes on their own row, the grouped score bar. |
 | [v2.2.4.md](v2.2.4.md) | Desktop fill: the column that fills the height it has, and the row plan behind it. |
+| [v2.2.5.md](v2.2.5.md) | The board answers: the live number under the pointer, and the ladder on Mood and Energy. |
 | [../notes/brief.md](../notes/brief.md) | The original brief, kept for reference. |
 | [../notes/design-pass-v2.1.2.md](../notes/design-pass-v2.1.2.md) | The design brief v2.1.2 answered. |
