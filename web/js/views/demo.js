@@ -11,6 +11,7 @@ import { loadingBlock } from "../core/chrome.js";
 
 export async function renderDemo(app) {
   mount(app, loadingBlock([320, 180, 180]));
+  document.body.dataset.wide = "true";
 
   const [schema, summary] = await Promise.all([
     catalogue(),

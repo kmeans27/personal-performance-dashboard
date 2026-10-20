@@ -13,47 +13,55 @@ Newest first. Every release is specified in its own file; the full ledger is in
 
 | Version | Status | What it did |
 | ------- | ------ | ----------- |
-| [v2.2](v2.2.md) | 🚧 Planned | Log it on the board: drag the knob, tap the block, flip the switch. No sheet. |
+| [v2.2](v2.2.md) | 🚧 Planned | The rest of answering on the board: undo, and pointer polish. Most of it shipped early, in v2.1.2. |
+| [v2.1.2](v2.1.2.md) | ✅ Shipped | The home screen rework. One screen of instruments: a rail with the score, yesterday, usual, the next best move and the week; three category columns; a score bar at the bottom. The cards are the only inputs — no sheet. |
 | [v2.1.1](v2.1.1.md) | ✅ Shipped | The density pass. Nothing stretches to fill the screen: a field is as big as what it holds, in three packed columns, and the left third now carries the category bars, a Mon–Sun week strip and three numbers. |
 | [v2.1](v2.1.md) | ✅ Shipped | The UI pass. Every field answers again, one field retired, and every chart redrawn in the shape its own data has. Three-band layout, three rings. |
 | [v0.2](v0.2.md) | ✅ Shipped | The board: every field for today on one non-scrolling screen, tap a tile to log it, reachable from your phone. |
 | v0.1 | ✅ Shipped | The loop: one field per screen, scored rings, weekly fields, trends, insights, a 90-day demo. |
 
 ```
-   ╭──────────────╮   BODY ──────────────────────────────────── 6 / 6
-   │   ╭──────╮   │   ┌────────────────┐ ┌───────┐ ┌────────┐
-   │   │      │   │   │ sleep    ──●── │ │ steps │ │  gym   │
-   │   │  77  │   │   │ ╰────────────╯ │ ├───────┤ ├────────┤
-   │   ╰──────╯   │   ├────────────────┤ │alcohol│ │ greens │
-   │  MON 19 OCT  │   │ weight  ╱╲╱╲   │ ├───────┤ ├────────┤
-   │  12 of 13    │   │ rhythm  ▬▬▬    │ │outdoor│ │creatine│
-   ├──────────────┤   MIND ──────────────────────────────────── 5 / 5
-   │ BODY     89  │   ▐ deep ▐▐▐   learned ────────●   read  ▐
-   │ MIND     58  │   ────────────────────────────────────────────
-   │ ATTENTION 85 │   ATTENTION ───────────────────────────────── 2 / 2
-   ├──────────────┤   ┌────────────────┐ ┌───────┐
-   │ M T W T F S S│   │ screen   ──●── │ │pickups│
-   │ ▁ ▂ ▄ · · · ·│   │ ╰────────────╯ │ └───────┘
-   │ 77  1/7  77  │   └────────────────┘
-   ╰──────────────╯
+   MON 19 OCTOBER          ● BODY 6/9 65     ● MIND 5/5 78    ● ATTENTION 3/3 93
+   ╭──────────────╮        ┌───────────────┐ ┌───────┐ ┌────────┐
+   │      ╭────╮  │        │ Slept  10.25  │ │ Steps │ │  Gym   │
+   │      │ 64 │  │        │ ═══▓▓▓══●───  │ ├───────┤ ├────────┤
+   │      ╰────╯  │        │ 1.2h past     │ │ 2,200 │ │ 3 wks  │
+   │ so far       │        └───────────────┘ └───────┘ └────────┘
+   │ YEST 21  USUAL 64     … one row per pair of fields, every row full …
+   │ NEXT BEST MOVE
+   │ Clean day         +10
+   │ 18 of 30 days  [SHOW CARD]
+   │ THIS WEEK       64
+   │ ◉ · · · · · ·
+   ├─────────────────────────────────────────────────────────────────────────
+   │ WHERE YOUR SCORE COMES FROM
+   │ ▮▮▮▮▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮
+   ╰─────────────────────────────────────────────────────────────────────────
 ```
 
 ## Why it exists
 
-- **Logging is the point.** One field per screen in the guided flow, sized to the
-  field type, prefilled with yesterday's value. Each answer fills its ring live.
-- **One glance beats a list.** The board puts every field on one screen — no
-  scrolling — grouped the way the rings are, and sized to what each field *is*: a
-  yes/no is one small box, a gauge earns two. Rings cap at 100% each, so a strong
-  area can never hide a neglected one.
-- **The day, and the week.** The left third carries the rings, today's three
-  categories as bars, and a Monday-to-Sunday strip with one bar per day — so a
-  single glance answers "how is today" and "how is the week" at once.
-- **A shape per field.** A yes/no is drawn as a switch, a band to land in as a
-  band, a count you stack as blocks, a ceiling you stay under as a line you keep
-  left of. The chart is decided by the data, never by taste.
-- **Room to grow, never failure.** No streaks-on-fire, no red screens. Bad days
-  are framed as the next thing to try.
+- **The cards are the only inputs.** Every field is answered where it is read:
+  drag the knob, tap the third block, flip the switch. No sheet, no second list of
+  fields, no modal. The guided `/log` flow stays for the phone, one field a screen.
+- **One glance beats a list.** The board puts every field for today on one screen —
+  no scrolling — grouped the way the rings are, and sized to what each field *is*:
+  a yes/no is half a row, a gauge earns a full one. Rings cap at 100% each, so a
+  strong area can never hide a neglected one.
+- **Every card says where it sits.** Label and value on the left, points earned on
+  the right, the instrument in the middle, and one line of plain words underneath:
+  *1.2h past the band*, *2,200 to go*, *5 of 7 days*. No 7-day charts on Today —
+  history lives in Trends.
+- **The day, and the week, and what to do next.** The rail carries the ring and
+  score with yesterday and your usual as plain numbers, the **next best move** (the
+  open field with the most points left) and a Monday-to-Sunday strip of mini rings.
+  The bar along the bottom splits the score into what each field is worth.
+- **A shape per field.** A yes/no is drawn as two explicit segments, a band to land
+  in as a band, a count you stack as blocks, a ceiling you stay under as a line you
+  keep left of. The instrument is decided by the data, never by taste.
+- **Room to grow, never failure.** No streaks-on-fire, no red screens, no confetti.
+  A day with gaps reads as *what is still open*, and the score says *so far* until
+  the categories are filled.
 - **Correlation, not cause.** After a few weeks with data, the dashboard says
   things like *"on days with 7 h+ sleep your mood averages 3.9 vs 3.2"* and
   labels them as correlations.
@@ -140,17 +148,18 @@ src/pulse/
   api/             FastAPI routers (days, analytics)
 web/
   css/tokens.css   colours, spacing, type scale — the design system
-  css/board.css    the board: bands, tiles, the eight chart shapes, tile states
+  css/board.css    the board: the rail, three category columns, the card and its
+                   instruments, states, the score bar, four breakpoints
   js/core/         api client, dom helpers, formatting, motion, haptics
   js/rings.js      the ring renderer used by every page
-  js/components/   tile.js (one tile per shape), quickLog.js, sheet, toast
+  js/components/   card.js (one card, all instruments, inline logging), sheet, toast
   js/views/        one small module per page
 ```
 
 Everything is hand-written ES modules — no build step, no npm, no framework.
 
 Adding a field means editing `metrics.py` once: the field, the shape it reads
-best in, and the two cells it occupies on the board.
+best in, its weight, and whether it takes one card slot or two.
 
 ## Cloudflare-free, analytics-free, yours
 
@@ -158,7 +167,8 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-v2.1.1 — the whole loop works end to end, the whole day fits one screen without
-stretching to fill it, every field is drawn in the shape its data deserves and
-sized to what it holds, and the week is visible from the home screen. Next:
-[v2.2](v2.2.md), answering on the board itself.
+v2.1.2 — the whole loop works end to end, the whole day fits one screen at
+1440×900 without scrolling, every field is answered in place on the board, and
+every card says in plain words how today sits against where it should land.
+Next: [v2.2](v2.2.md), the rest of the board interaction — undo, and pointer
+polish.

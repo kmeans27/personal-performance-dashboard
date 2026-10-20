@@ -303,11 +303,15 @@ def weekly_progress(
         # simply not being tracked yet, and its tile says so.
         tracked = any(d.isoformat() in values_by_day for d in window(day, length))
         target = float(settings.get("gym_target") or config["target"]) if metric_id == "gym" else config["target"]
+        target_label = (
+            f"{int(target)}–{int(target) + 1} sessions" if metric_id == "gym" else config["target_label"]
+        )
         cards.append(
             {
                 "id": metric_id,
                 "label": config["label"],
-                "target_label": config["target_label"],
+                "target_label": target_label,
+                "target": target,
                 "count": round(count, 1),
                 "unit": config.get("unit", ""),
                 "progress": round(min(count / max(target, 0.0001), 1.0), 3),

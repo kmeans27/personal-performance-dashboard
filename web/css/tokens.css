@@ -9,28 +9,30 @@
   /* ---- surfaces */
   --bg: #0a0b0d;
   --bg-glow: #101318;
-  --surface: #101215; /* a tile */
-  --surface-2: #16181d; /* a tile under the cursor */
-  --surface-3: #1c1f25; /* a raised control */
-  --line: rgba(255, 255, 255, 0.07);
+  --surface: #111317; /* a card */
+  --surface-2: #171a1f; /* a card under the cursor */
+  --surface-3: #1f2329; /* a raised control */
+  --line: rgba(255, 255, 255, 0.06);
   --line-2: rgba(255, 255, 255, 0.13);
   --shadow-soft: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 
   /* ---- ink */
-  --ink: #eceef1;
-  --ink-2: #a2a9b3;
-  --ink-3: #6e757f;
-  --ink-4: #474d56;
+  --ink: #f2f3f5;
+  --ink-2: #9aa0a6;
+  --ink-3: #737a83;
+  --ink-4: #4a5058;
 
-  /* ---- one accent per category */
+  /* ---- one colour per category */
   --body: #43d6a0;
   --mind: #7d93f5;
-  --attention: #f2a94e;
+  --attention: #5aa9f0;
+  /* amber is not a category: it means "needs attention", nothing else */
+  --amber: #f2a94e;
   --overall: #e9edf2;
 
   --body-dim: rgba(67, 214, 160, 0.15);
   --mind-dim: rgba(125, 147, 245, 0.15);
-  --attention-dim: rgba(242, 169, 78, 0.15);
+  --attention-dim: rgba(90, 169, 240, 0.15);
 
   /* ---- type */
   --font: "Inter var", "Inter", system-ui, -apple-system, "Segoe UI", Roboto,

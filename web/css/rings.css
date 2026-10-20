@@ -25,16 +25,23 @@
   stroke-linecap: round;
   stroke: currentColor;
   transition: stroke-dashoffset var(--dur-ring) var(--ease-spring),
-    stroke var(--dur-2) var(--ease-out);
+    stroke var(--dur-2) var(--ease-out), filter var(--dur-3) var(--ease-out);
+}
+
+/* The ring is a light source: soft, coloured, and only as loud as the score. */
+.ring[data-empty="false"] .ring-progress {
+  filter: drop-shadow(0 0 var(--glow, 3px) color-mix(in srgb, currentColor 55%, transparent));
 }
 
 .ring[data-focus="true"] .ring-progress {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 60%, transparent));
+  filter: drop-shadow(0 0 calc(var(--glow, 3px) * 1.7) color-mix(in srgb, currentColor 70%, transparent));
   animation: breathe 5.5s var(--ease-inout) infinite;
 }
 
+/* Nothing logged in a category: its arc is missing, and says so. */
 .ring[data-empty="true"] .ring-track {
-  stroke: rgba(255, 255, 255, 0.03);
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-dasharray: 2 7;
 }
 
 @keyframes breathe {
@@ -67,12 +74,13 @@
 /* The score scales with the ring, not the window: a rail ring and a full-page
    ring can be the same drawing at two sizes. */
 .ring-score {
-  font-size: clamp(1.3rem, 21cqw, 3.15rem);
+  font-size: clamp(1.4rem, 26cqw, 4.4rem);
   font-weight: 600;
   line-height: 0.92;
   letter-spacing: -0.045em;
   font-variant-numeric: tabular-nums;
   color: var(--overall);
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.14);
 }
 
 .ring-score[data-empty="true"] {

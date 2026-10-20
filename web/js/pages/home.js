@@ -1,11 +1,9 @@
-/* Page entry: the board. One screen, every field, today. */
+/* Page entry: the board. Today, every field, one screen. */
 
 import { mountChrome, errorPanel, loadingBlock } from "../core/chrome.js";
 import { api } from "../core/api.js";
 import { catalogue } from "../core/catalogue.js";
 import { boardView } from "../views/board.js";
-import { buildSuggestions } from "../views/log.js";
-import { today } from "../core/format.js";
 import { mount } from "../core/dom.js";
 
 const app = document.querySelector("#app");
@@ -15,16 +13,8 @@ document.body.dataset.board = "true";
 async function load() {
   mount(app, loadingBlock([320, 200, 200]));
   try {
-    const [schema, payload, prefill] = await Promise.all([
-      catalogue(),
-      api.today(),
-      api.prefill(today()),
-    ]);
-    mount(app, boardView({
-      payload,
-      schema,
-      suggestion: buildSuggestions(schema, prefill),
-    }).el);
+    const [schema, payload] = await Promise.all([catalogue(), api.today()]);
+    mount(app, boardView({ payload, schema }).el);
   } catch (error) {
     mount(app, errorPanel(error.message, load));
   }

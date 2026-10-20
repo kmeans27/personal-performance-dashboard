@@ -1,221 +1,214 @@
-/* The board: every field for today, on one screen, nothing to scroll.
-   Two thirds of it are the fields themselves — small, uniform boxes, one per
-   thing you log, packed so no band ends on a half-empty row. The other third
-   is what the day means: the rings, the three categories, the week so far.
-   Quiet until answered, lit when it is. */
+/* The board: today, one screen, nothing to scroll.
+   The rail says what the day means. The main area is three category columns,
+   two cards wide, every row full. The bar along the bottom is the score,
+   split into what each field is worth. Quiet until answered, lit when it is. */
 
 body[data-board="true"] .page {
   max-width: none;
   min-height: calc(100dvh - var(--chrome-h));
   display: grid;
-  align-content: center;
-  padding: clamp(12px, 2vh, 26px) clamp(14px, 2vw, 34px);
+  align-content: stretch;
+  padding: clamp(12px, 1.7vh, 22px) clamp(14px, 1.7vw, 30px);
 }
 
-/* Nothing pushes the board past the fold. */
 body[data-board="true"] .footnote {
   display: none;
 }
 
 .board {
   width: 100%;
-  max-width: 1512px;
+  max-width: 1800px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(280px, 27%) minmax(0, 1fr);
-  align-items: stretch;
-  gap: clamp(12px, 1.4vw, 22px);
-  /* One tile row. The whole field grid is sized from this, and the board is
-     exactly as tall as its content — never stretched to fill a big screen.
-     (No size containment here: the board must take its height from its
-     fields, and the tiles carry their own container queries.) */
-  --row: clamp(66px, 8.4dvh, 94px);
-  --gap: clamp(5px, 0.85dvh, 9px);
+  grid-template-columns: minmax(252px, 20.5%) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "rail main"
+    "bar bar";
+  align-content: start;
+  column-gap: clamp(14px, 1.5vw, 28px);
+  row-gap: clamp(10px, 1.4vh, 18px);
 }
 
 .board--framed {
+  min-height: min(820px, 92vh);
+  padding: clamp(10px, 1.2vh, 16px);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  background: var(--surface);
-  padding: clamp(12px, 1.6vh, 20px);
+  background: var(--bg);
 }
 
 /* ------------------------------------------------------------------ rail */
 
 .rail {
+  grid-area: rail;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: clamp(9px, 1.5vh, 18px);
+  gap: clamp(10px, 1.6vh, 20px);
   min-width: 0;
   min-height: 0;
 }
 
+.rail-top {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.rail-date {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
 .rail-rings {
-  flex: 0 1 auto;
   display: grid;
   place-items: center;
+  width: 100%;
   min-height: 0;
 }
 
 .rail-rings .rings {
-  width: min(100%, clamp(148px, 29vh, 292px));
+  width: min(100%, clamp(150px, 26vh, 288px));
 }
 
-.rail-read {
+/* Yesterday and the usual: two plain numbers, no line, no trend. */
+.rail-compare {
   display: grid;
-  gap: clamp(5px, 0.8vh, 9px);
-  justify-items: start;
-  min-width: 0;
-}
-
-.rail-day {
-  font-size: var(--fs-2xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.rail-count {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  font-size: var(--fs-xs);
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.rail-count[data-complete="true"] {
-  color: var(--ink);
-}
-
-.rail-count .dot {
-  width: 7px;
-  height: 7px;
-  background: var(--body);
-}
-
-/* How much of the day is filled in — three categories' worth of light. */
-.rail-meter {
-  position: relative;
-  width: min(100%, 210px);
-  height: 3px;
-  border-radius: var(--r-full);
-  background: rgba(255, 255, 255, 0.07);
-  overflow: hidden;
-}
-
-.rail-meter i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--body) 65%, transparent),
-    color-mix(in srgb, var(--mind) 65%, transparent) 52%,
-    color-mix(in srgb, var(--attention) 65%, transparent)
-  );
-  transition: width var(--dur-ring) var(--ease-out);
-}
-
-/* One line of advice when the day is open, one line of credit when it is done. */
-.rail-note {
-  display: flex;
-  align-items: baseline;
-  gap: var(--s-2);
-  font-size: var(--fs-xs);
-  line-height: 1.45;
-  color: var(--ink-2);
-  max-width: 40ch;
-}
-
-.rail-note .dot {
-  width: 6px;
-  height: 6px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--accent);
-  transform: translateY(-1px);
-}
-
-.rail-note[data-show="false"] {
-  display: none;
-}
-
-.rail-note[data-complete="true"] {
-  color: var(--ink-3);
-}
-
-/* The three categories, today, as bars — the legend the rings never had. */
-.cats {
-  display: grid;
-  gap: clamp(5px, 0.8vh, 8px);
-  padding-top: clamp(4px, 0.7vh, 8px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+  padding-top: clamp(8px, 1.2vh, 14px);
   border-top: 1px solid var(--line);
 }
 
-.cat-row {
+.rail-mid {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) 24px;
-  align-items: center;
-  gap: var(--s-2);
+  gap: clamp(10px, 1.6vh, 20px);
+  min-width: 0;
 }
 
-.cat-label {
-  font-size: 10px;
+.compare-cell {
+  display: grid;
+  gap: 2px;
+}
+
+.compare-label {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.compare-value {
+  font-size: clamp(1.1rem, 2.4vh, 1.4rem);
   font-weight: 600;
-  letter-spacing: 0.11em;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+}
+
+/* The one open card worth the most, priced in points of the score. */
+.move {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.eyebrow--amber {
+  color: var(--amber);
+}
+
+.move-card {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: clamp(10px, 1.4vh, 15px) clamp(12px, 1vw, 16px);
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, var(--line));
+  background: var(--surface);
+  text-align: left;
+  transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
+}
+
+.move-card:hover {
+  background: var(--surface-2);
+}
+
+.move-card--clear {
+  border-color: var(--line);
+}
+
+.move-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.move-label {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.move-points {
+  font-size: var(--fs-md);
+  font-weight: 650;
+  color: var(--amber);
+}
+
+.move-line {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+.move-go {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 
-.cat-bar {
-  height: 4px;
-  border-radius: var(--r-full);
-  background: rgba(255, 255, 255, 0.055);
-  overflow: hidden;
-}
-
-.cat-bar i {
-  display: block;
-  width: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-  transition: width var(--dur-ring) var(--ease-spring);
-}
-
-.cat-score {
-  font-size: 12px;
-  font-weight: 560;
-  text-align: right;
+.move-card:hover .move-go {
   color: var(--ink);
-  font-variant-numeric: tabular-nums;
 }
 
-.cat-score[data-empty="true"] {
-  color: var(--ink-4);
-}
-
-/* Monday to Sunday, one bar per day: the week, at a glance. */
+/* Monday to Sunday, one small ring per day. */
 .week {
   display: grid;
-  gap: clamp(5px, 0.8vh, 8px);
+  gap: var(--s-2);
+  min-width: 0;
 }
 
-.week-track {
+.week .eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.week-avg {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+.week-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: 3px;
 }
 
 .week-cell {
   display: grid;
   justify-items: center;
-  gap: 4px;
-  padding: 5px 0 4px;
+  gap: 3px;
+  padding: 6px 0 5px;
   border-radius: var(--r-sm);
   color: var(--ink-3);
   transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
@@ -227,19 +220,26 @@ body[data-board="true"] .footnote {
 }
 
 .week-cell[data-today="true"] {
-  background: var(--surface-2);
+  background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--ink);
 }
 
+.week-cell[data-empty="true"] {
+  opacity: 0.5;
+}
+
+.week-ring {
+  display: block;
+  line-height: 0;
+}
+
 .week-letter,
 .week-date {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .week-date {
@@ -250,454 +250,409 @@ body[data-board="true"] .footnote {
   color: var(--ink-2);
 }
 
-/* The bar is the day's own score, on its own scale. An empty slot is honest. */
-.week-bar {
-  display: grid;
-  align-content: end;
-  width: min(100%, 22px);
-  height: clamp(28px, 4.4vh, 46px);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
+/* ------------------------------------------------------------------ main */
 
-.week-cell[data-empty="true"] .week-bar {
-  background: none;
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.week-fill {
-  display: block;
-  width: 100%;
-  height: 0;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--overall) 62%, transparent);
-  transition: height var(--dur-ring) var(--ease-spring);
-}
-
-.week-cell[data-today="true"] .week-fill {
-  background: var(--overall);
-}
-
-/* Three numbers, honestly: the week's average, how many days have a score,
-   and the best of them. Nothing here can be failed. */
-.rail-stats {
+.main {
+  grid-area: main;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s-3);
-  padding-top: clamp(5px, 0.9vh, 10px);
-  border-top: 1px solid var(--line);
-}
-
-.rail-stat {
-  display: grid;
-  gap: 3px;
+  gap: clamp(12px, 1.4vw, 26px);
   min-width: 0;
+  min-height: 0;
 }
 
-.rail-stat-label {
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-4);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rail-stat-value {
-  font-size: clamp(0.95rem, 2.3vh, 1.15rem);
-  font-weight: 560;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.rail-actions {
-  display: flex;
+.cat {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: var(--s-2);
-  flex-wrap: wrap;
-}
-
-.rail-actions .btn {
-  padding: var(--s-2) var(--s-4);
-  font-size: var(--fs-xs);
-}
-
-/* ----------------------------------------------------------------- fields */
-
-.fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
   min-width: 0;
+  min-height: 0;
 }
 
-.band {
-  display: grid;
-  gap: var(--gap);
-  min-width: 0;
-}
-
-.band-head {
+.cat-head {
   display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--ink-3);
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: 0 2px;
 }
 
-.band-head .dot {
-  width: 5px;
-  height: 5px;
+.cat-dot {
+  width: 7px;
+  height: 7px;
   flex: none;
   border-radius: 50%;
   background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 65%, transparent);
+  transform: translateY(-2px);
 }
 
-/* A hairline carrying the eye to the count, the way a rule does on paper. */
-.band-head .rule {
-  flex: 1;
-  height: 1px;
-  min-width: var(--s-3);
-  background: var(--line);
-  transition: background var(--dur-3) var(--ease-out);
+.cat-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
 }
 
-.band-count {
+.cat-count {
+  margin-left: auto;
+  font-size: 12px;
   color: var(--ink-4);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
 }
 
-.band[data-complete="true"] .band-head {
-  color: var(--ink-2);
+.cat-score {
+  font-size: clamp(1.05rem, 2.2vh, 1.4rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ink);
 }
 
-.band[data-complete="true"] .band-head .rule {
-  background: color-mix(in srgb, var(--accent) 34%, var(--line));
+.cat-score[data-empty="true"] {
+  color: var(--ink-4);
 }
 
-.band[data-complete="true"] .band-count {
-  color: var(--accent);
+.cat[data-complete="true"] .cat-count {
+  color: color-mix(in srgb, var(--accent) 70%, var(--ink-3));
 }
 
-/* ------------------------------------------------------------------ tiles */
-
-.tiles {
+/* Two card slots per column, every row full — no field is ever half a row. */
+.cat-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: var(--row);
-  gap: var(--gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(116px, auto);
+  gap: clamp(6px, 0.9vh, 10px);
+  min-height: 0;
+}
+
+/* ---------------------------------------------------------------- a card */
+
+.card {
+  container: card / inline-size;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(min-content, 1fr) auto;
+  gap: clamp(3px, 0.6vh, 7px);
+  min-height: 116px;
   min-width: 0;
-}
-
-.tile {
-  container: tile / size;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  align-content: center;
-  /* A tile sizes its own insides from the row it sits in — the one length
-     every tile on the board shares. */
-  gap: clamp(2px, calc(var(--row) * 0.04), 6px);
-  padding: clamp(5px, calc(var(--row) * 0.1), 14px) clamp(9px, calc(var(--row) * 0.17), 15px);
-  border-radius: var(--r-sm);
+  padding: clamp(7px, calc(3px + 0.7vh), 11px) clamp(10px, 0.85vw, 16px);
+  border-radius: var(--r-md);
   border: 1px solid var(--line);
   background: var(--surface);
   text-align: left;
-  overflow: hidden;
   transition: border-color var(--dur-2) var(--ease-out),
-    background var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
+    background var(--dur-2) var(--ease-out);
 }
 
-/* Two cells wide belongs to a switch with a note or a number with a track.
-   Everything else is one cell, which is the point. */
-.tile[data-w="2"] {
+.card[data-w="2"] {
   grid-column: span 2;
 }
 
-.tile[data-h="2"] {
-  grid-row: span 2;
-}
-
-.tile[data-state="empty"] {
+.card[data-state="empty"] {
   border-style: dashed;
 }
 
-.tile:hover {
+.card[data-state="empty"][data-optional="true"] {
+  opacity: 0.8;
+}
+
+.card:hover {
   border-color: var(--line-2);
+}
+
+/* Answered: a solid card, with the accent only where it means something. */
+.card[data-settled="true"] {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
   background: var(--surface-2);
 }
 
-.tile:active {
-  transform: scale(0.985);
+.card[data-state="open"] .card-value {
+  color: var(--ink);
 }
 
-.tile[data-state="done"],
-.tile[data-state="open"] {
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 6%, var(--surface)) 0%,
-    var(--surface) 64%
-  );
-}
-
-.tile[data-state="empty"][data-optional="true"] {
-  opacity: 0.72;
-}
-
-.tile-top {
+.card-head {
   display: flex;
   align-items: baseline;
-  gap: var(--s-2);
-  width: 100%;
+  gap: clamp(6px, 0.6vw, 12px);
   min-width: 0;
 }
 
-.tile-label {
-  font-size: clamp(8.5px, 3.4cqh, 11.5px);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  min-width: 0;
+.card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.tile[data-state="done"] .tile-label,
-.tile[data-state="open"] .tile-label {
+.card[data-settled="true"] .card-label {
   color: var(--ink-2);
 }
 
-.tile-value {
-  margin-left: auto;
+.card-value {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  font-size: clamp(0.9rem, 9cqh, 2.2rem);
-  font-weight: 560;
-  letter-spacing: -0.03em;
+  gap: 3px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.tile[data-state="empty"] .tile-value {
+.card[data-state="empty"] .card-value {
   color: var(--ink-4);
 }
 
-/* A yes/no is the answer itself: say it in the light. */
-.tile--switch[data-state="done"] .tile-value {
-  color: var(--accent);
-}
-
-@container tile (min-height: 106px) {
-  .tile-value {
-    font-size: clamp(1.2rem, 13cqh, 2.3rem);
-  }
-}
-
-.tile-unit {
-  font-size: 0.6em;
-  font-weight: 450;
+.card-unit {
+  font-size: 0.52em;
+  font-weight: 500;
   letter-spacing: 0;
   color: var(--ink-3);
 }
 
-.tile-caption {
-  font-size: clamp(8.5px, 3.2cqh, 11.5px);
-  line-height: 1.25;
+.card-check {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  align-self: center;
+  stroke: var(--accent);
+}
+
+.card-points {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.card-points small {
+  font-size: 11px;
+  font-weight: 500;
   color: var(--ink-4);
+}
+
+.card-points[data-chip="true"] {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-4);
+  letter-spacing: 0.02em;
+}
+
+.card-gap {
+  font-size: 13px;
+  line-height: 1.25;
+  color: var(--ink-2);
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
-.tile[data-state="done"] .tile-caption,
-.tile[data-state="open"] .tile-caption {
+.card[data-state="empty"] .card-gap {
   color: var(--ink-3);
 }
 
-.tile[data-note="true"] .tile-caption {
-  font-style: italic;
-  color: var(--ink-2);
-}
-
-.tile-chart {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-  min-width: 0;
-}
-
-/* --------------------------------------------------------- chart: a range */
-/* A value against a good zone: land inside it (sleep) or stay under it
-   (screen time, pickups). The knob is where you are; the band is where good is. */
-
-.chart-range {
-  justify-content: space-between;
-  gap: clamp(4px, 2.4cqh, 18px);
-  min-height: 0;
-}
-
-/* The gauge itself: the track, then its axis right beneath it. */
-.range-gauge {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(4px, 5cqh, 24px);
-  min-height: 0;
-}
-
-.range-track {
-  position: relative;
+.card-note {
+  grid-column: 1 / -1;
   width: 100%;
-  height: clamp(5px, 8cqh, 34px);
-  border-radius: var(--r-full);
-  background: rgba(255, 255, 255, 0.055);
-}
-
-.range-zone {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: clamp(13px, 19cqh, 74px);
+  min-width: 0;
+  padding: 5px 8px;
   border-radius: var(--r-xs);
-  background: color-mix(in srgb, var(--accent) 30%, transparent);
-  box-shadow: inset 1.5px 0 0 color-mix(in srgb, var(--accent) 75%, transparent),
-    inset -1.5px 0 0 color-mix(in srgb, var(--accent) 75%, transparent);
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
 }
 
-.range-marker {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: clamp(11px, 12cqh, 46px);
-  height: clamp(11px, 12cqh, 46px);
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 clamp(2px, 0.9cqh, 6px) var(--surface);
-  transition: left var(--dur-ring) var(--ease-spring);
-}
-
-/* The axis under a range track: its ends, and the edge of the good zone. */
-.range-foot {
-  position: relative;
-  display: none;
-  height: 11px;
-  font-size: clamp(7.5px, 3.2cqh, 11px);
-  letter-spacing: 0.04em;
+.card-note::placeholder {
   color: var(--ink-4);
-  font-variant-numeric: tabular-nums;
 }
 
-.range-foot .edge {
-  position: absolute;
-  top: 0;
-  white-space: nowrap;
-  transform: translateX(-50%);
+.card[data-pulse="true"] {
+  animation: card-pulse 1.3s var(--ease-out) both;
 }
 
-.range-foot .edge--lo {
-  transform: none;
-}
-
-.range-foot .edge--hi {
-  transform: translateX(-100%);
-}
-
-.range-foot .edge--zone {
-  color: color-mix(in srgb, var(--accent) 72%, var(--ink-3));
-}
-
-@container tile (min-height: 106px) {
-  .range-foot {
-    display: block;
+@keyframes card-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--amber) 55%, transparent);
+    border-color: var(--amber);
+  }
+  40% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--amber) 12%, transparent);
+    border-color: var(--amber);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
   }
 }
 
-/* Past the zone: the knob goes hollow, so "over" reads without any red. */
-.chart-range[data-beyond="true"] .range-marker {
-  background: var(--surface);
-  box-shadow: inset 0 0 0 clamp(2px, 0.6cqh, 3px) var(--accent),
-    0 0 0 clamp(2px, 0.6cqh, 3px) var(--surface);
+.card[data-landed="true"] {
+  animation: card-land var(--dur-3) var(--ease-spring);
 }
 
-.chart-range[data-known="false"] .range-marker,
-.tile[data-state="empty"] .range-marker {
-  opacity: 0;
+@keyframes card-land {
+  from {
+    box-shadow: inset 0 0 0 22px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  to {
+    box-shadow: inset 0 0 0 22px transparent;
+  }
 }
 
-/* ----------------------------------------------------------- chart: a bar */
-/* Progress toward a target you are chasing. */
+/* ------------------------------------------------------------ instruments */
 
-.bar-track {
+.ins {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---- a value on a track: the zone to land in, today, yesterday ----------- */
+
+.ins--scale {
+  padding: 0 1px;
+  touch-action: none;
+  cursor: ew-resize;
+}
+
+.ins--scale:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--r-xs);
+}
+
+.ins-track {
   position: relative;
   width: 100%;
-  height: clamp(5px, 4cqh, 22px);
+  height: 100%;
+  min-height: 8px;
+  max-height: 112px;
   border-radius: var(--r-full);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.bar-fill {
+.ins-zone {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: calc(100% + 8px);
+  border-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--accent) 55%, transparent),
+    inset -1px 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.ins-fill {
   position: absolute;
   inset: 0 auto 0 0;
   width: 0;
   border-radius: var(--r-full);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 78%, var(--surface)),
-    var(--accent)
-  );
+  background: color-mix(in srgb, var(--accent) 62%, transparent);
   transition: width var(--dur-ring) var(--ease-spring);
 }
 
-.tile[data-state="empty"] .bar-fill {
+.ins-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ink-4);
+}
+
+.ins-yest {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.ins-mark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: auto;
+  height: max(15px, min(48px, 130%));
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--surface-2), 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: left var(--dur-ring) var(--ease-spring);
+}
+
+.card[data-state="empty"] .ins-mark {
   opacity: 0;
 }
 
-/* ------------------------------------------------------ chart: a count of cells */
-/* Small counts you tick off: gym sessions, alcohol-free days. */
+.ins--scale[data-beyond="true"] .ins-mark {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 3px var(--surface-2);
+}
 
-.cells {
+.ins--scale[data-drag] .ins-mark {
+  transition: none;
+}
+
+/* ---- small counts: one dash each ---------------------------------------- */
+
+.ins-dashes {
   display: flex;
-  gap: clamp(3px, 0.8cqh, 6px);
+  gap: clamp(3px, 0.5vw, 7px);
   width: 100%;
-  height: clamp(5px, 4cqh, 22px);
+  height: 100%;
+  min-height: 8px;
+  max-height: 22px;
 }
 
-.cell {
+.dash {
   flex: 1;
+  min-width: 0;
   border-radius: var(--r-full);
-  background: rgba(255, 255, 255, 0.065);
-  transition: background var(--dur-3) var(--ease-out);
+  background: rgba(255, 255, 255, 0.07);
+  transition: background var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
 }
 
-.cell[data-filled="true"] {
+.dash[data-filled="true"] {
   background: var(--accent);
 }
 
-/* ----------------------------------------------------- chart: a stack of blocks */
-/* A big count you stack up: deep blocks. Three fills the tile. */
-
-.chart-blocks {
-  justify-content: flex-end;
+.dash[data-live="true"] {
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--line-2);
 }
 
-.blocks {
+.dash[data-live="true"]:hover {
+  box-shadow: inset 0 0 0 1px var(--ink-2);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.dash[data-today="true"][data-filled="false"] {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* ---- a big count: one block each ---------------------------------------- */
+
+.ins--blocks {
+  height: 100%;
+}
+
+.ins-blocks {
   display: flex;
-  align-items: flex-end;
-  gap: clamp(4px, 1.4cqh, 12px);
+  gap: clamp(4px, 0.7vw, 10px);
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -706,115 +661,139 @@ body[data-board="true"] .footnote {
 .block {
   flex: 1;
   height: 100%;
-  min-height: clamp(9px, 6cqh, 36px);
-  border-radius: var(--r-xs);
+  min-height: 14px;
+  border-radius: var(--r-sm);
   border: 1px dashed var(--line-2);
-  background: rgba(255, 255, 255, 0.03);
-  transition: background var(--dur-3) var(--ease-out), border-color var(--dur-3) var(--ease-out),
-    transform var(--dur-3) var(--ease-spring);
+  background: rgba(255, 255, 255, 0.025);
+  transition: background var(--dur-3) var(--ease-out), border-color var(--dur-3) var(--ease-out);
+}
+
+.block:hover {
+  border-color: var(--ink-3);
 }
 
 .block[data-filled="true"] {
-  border: 1px solid transparent;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, white 16%, var(--accent)),
-    color-mix(in srgb, black 10%, var(--accent))
-  );
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface));
 }
 
-/* --------------------------------------------------------- chart: a switch */
-/* A yes/no that must look answered from across the room. */
+/* ---- a yes/no: two explicit segments ------------------------------------ */
 
-.chart-switch {
-  justify-content: center;
-  align-items: flex-start;
+.ins--switch {
+  align-items: stretch;
+  gap: clamp(4px, 0.5vw, 8px);
 }
 
-.pill {
-  --pill-h: clamp(17px, 26cqh, 40px);
-  --pill-pad: clamp(2px, 0.8cqh, 5px);
-  position: relative;
-  display: block;
-  height: var(--pill-h);
-  width: calc(var(--pill-h) * 2.05);
-  max-width: 100%;
-  border-radius: var(--r-full);
-  border: 1px solid var(--line-2);
-  background: rgba(255, 255, 255, 0.05);
-  transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out);
+.choice {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 14px;
+  line-height: 1;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
 }
 
-.pill-knob {
-  position: absolute;
-  top: var(--pill-pad);
-  bottom: var(--pill-pad);
-  left: var(--pill-pad);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--ink-3);
-  transition: left var(--dur-2) var(--ease-spring), right var(--dur-2) var(--ease-spring),
-    background var(--dur-2) var(--ease-out);
+.choice:hover {
+  border-color: var(--line-2);
+  color: var(--ink-2);
 }
 
-.pill[data-on="true"] {
+.choice[data-on="true"] {
   border-color: transparent;
   background: var(--accent);
+  color: #0a0b0d;
 }
 
-.pill[data-on="true"] .pill-knob {
-  left: auto;
-  right: var(--pill-pad);
-  background: var(--surface);
-}
+/* ---- a felt 1–5: five steps, the usual ticked --------------------------- */
 
-/* The whole tile answers, not just the dot. */
-.tile--switch[data-state="done"] {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 15%, var(--surface)) 0%,
-    color-mix(in srgb, var(--accent) 5%, var(--surface)) 100%
-  );
-  border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
-}
-
-/* ---------------------------------------------------------- chart: a scale */
-/* A felt 1–5, one bar per step, tallest last. */
-
-.scale {
-  display: flex;
-  align-items: flex-end;
-  gap: clamp(3px, 0.8cqh, 7px);
+.ins--steps {
   width: 100%;
-  height: clamp(13px, 11cqh, 54px);
 }
 
-.scale i {
+.ins-steps {
+  display: flex;
+  gap: clamp(3px, 0.45vw, 7px);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.step {
+  position: relative;
   flex: 1;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.065);
-  transition: background var(--dur-2) var(--ease-out), height var(--dur-3) var(--ease-spring);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+  padding-top: 2px;
 }
 
-.scale i[data-filled="true"] {
+.step i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 18px;
+  border-radius: var(--r-xs);
+  background: rgba(255, 255, 255, 0.055);
+  transition: background var(--dur-2) var(--ease-out);
+}
+
+.step span {
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step[data-filled="true"] i {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.step[data-on="true"] i {
   background: var(--accent);
 }
 
-/* ---------------------------------------------------------- chart: a night */
-/* The window you slept, across a 24-hour day. */
+.step[data-on="true"] span {
+  color: var(--ink-2);
+}
 
-.chart-night {
-  gap: clamp(3px, 0.7cqh, 6px);
-  justify-content: center;
+/* Your usual, as a tick above the step it sits on. */
+.step[data-usual="true"]::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  transform: translateX(-50%);
+  background: var(--ink-3);
+}
+
+/* ---- a night: a window across the day, both ends draggable -------------- */
+
+.ins--night {
+  touch-action: none;
 }
 
 .night-track {
   position: relative;
   width: 100%;
-  height: clamp(6px, 4.2cqh, 22px);
+  height: 100%;
+  max-height: 12px;
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
 }
 
 .night-window {
@@ -822,361 +801,342 @@ body[data-board="true"] .footnote {
   top: 0;
   bottom: 0;
   border-radius: var(--r-full);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 72%, var(--surface)),
-    var(--accent)
-  );
+  background: color-mix(in srgb, var(--accent) 62%, transparent);
   transition: left var(--dur-ring) var(--ease-spring), width var(--dur-ring) var(--ease-spring);
 }
 
-.night-window[data-hidden="true"] {
-  display: none;
+.ins--night[data-known="false"] .night-window {
+  opacity: 0.35;
 }
 
-.chart-night[data-known="false"] .night-window {
-  opacity: 0;
+.night-handle {
+  position: absolute;
+  top: 50%;
+  width: min(20px, 100%);
+  height: min(20px, 100%);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface-2);
+  cursor: ew-resize;
+  touch-action: none;
 }
 
-.night-hours {
-  display: flex;
-  justify-content: space-between;
-  font-size: clamp(7px, 3.4cqh, 9.5px);
-  letter-spacing: 0.06em;
-  color: var(--ink-4);
-  font-variant-numeric: tabular-nums;
+/* ---- thirty days of one habit, today at the end ------------------------- */
+
+.ins--clean {
+  cursor: pointer;
 }
 
-@container tile (max-height: 56px) {
-  .night-hours {
-    display: none;
-  }
-}
-
-/* ---------------------------------------------------------- chart: a trend */
-/* A number against its own history, with the goal as a dotted line. */
-
-.spark {
-  display: block;
+.ins-clean {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(2px, 0.35vw, 5px);
   width: 100%;
-  height: clamp(13px, 30cqh, 52px);
-  overflow: visible;
+  height: 100%;
 }
 
-.spark-line {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
+.clean-day {
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.055);
 }
 
-.spark-area {
-  fill: color-mix(in srgb, var(--accent) 12%, transparent);
-  stroke: none;
+.clean-day[data-filled="true"] {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-.spark-goal {
-  stroke: var(--line-2);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-  vector-effect: non-scaling-stroke;
+.clean-day[data-today="true"] {
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
-.spark-mark {
-  fill: var(--accent);
+.ins--clean[aria-pressed="true"] .clean-day[data-today="true"] {
+  background: var(--accent);
 }
 
-.chart-trend[data-known="false"] .spark {
-  opacity: 0;
+/* --------------------------------------------------------- the score bar */
+
+.breakdown {
+  grid-area: bar;
+  display: grid;
+  gap: clamp(5px, 0.8vh, 9px);
+  min-width: 0;
 }
 
-/* The week under a gauge: the same field's last readings, with the good zone
-   still drawn behind them. Only the two-row gauges have room for one. */
-.spark--mini {
-  height: clamp(13px, 12cqh, 46px);
+.breakdown .eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
 }
 
-.spark-zone {
-  fill: color-mix(in srgb, var(--accent) 18%, transparent);
+.seg-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  min-height: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.chart-range[data-history="false"] .spark--mini {
+.seg-readout b {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.segments {
+  display: flex;
+  gap: 3px;
+  height: clamp(16px, 2.4vh, 24px);
+}
+
+.seg {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 5px;
+  padding: 0;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent) 42%, transparent);
+  overflow: hidden;
+  transition: background var(--dur-2) var(--ease-out);
+}
+
+.seg:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.seg[data-logged="false"] {
+  background: none;
+  border: 1px dashed var(--line-2);
+  box-shadow: none;
+}
+
+.seg-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: color-mix(in srgb, var(--ink) 76%, transparent);
+  transition: width var(--dur-ring) var(--ease-spring);
+}
+
+.seg[data-logged="false"] .seg-fill {
   display: none;
-}
-
-@container tile (max-height: 106px) {
-  .spark--mini {
-    display: none;
-  }
-}
-
-/* ----------------------------------------------------------- the complete */
-/* The day filled in: the marks pick up a little light, nothing shouts. */
-
-.board[data-complete="true"] .tile[data-state="done"] .bar-fill,
-.board[data-complete="true"] .tile[data-state="done"] .cell[data-filled="true"],
-.board[data-complete="true"] .tile[data-state="done"] .scale i[data-filled="true"],
-.board[data-complete="true"] .tile[data-state="done"] .block[data-filled="true"],
-.board[data-complete="true"] .tile[data-state="done"] .range-marker,
-.board[data-complete="true"] .tile[data-state="done"] .night-window {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 50%, transparent));
-}
-
-.board[data-complete="true"] .tile[data-state="done"] {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 11%, var(--surface)) 0%,
-    var(--surface) 72%
-  );
-}
-
-.board[data-complete="true"] .rail .rings {
-  animation: board-settle 1.1s var(--ease-spring) both;
-}
-
-@keyframes board-settle {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.022);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* just-answered: one sweep, then quiet again */
-.tile[data-landed="true"] {
-  animation: tile-land var(--dur-3) var(--ease-spring);
-}
-
-@keyframes tile-land {
-  from {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
-  }
-  to {
-    box-shadow: 0 0 0 14px transparent;
-  }
-}
-
-/* ------------------------------------------------------- quick log sheet */
-
-.sheet--quick {
-  width: min(560px, 100%);
-}
-
-@media (min-width: 860px) {
-  .sheet--quick {
-    width: min(440px, 92vw);
-  }
-}
-
-.quick-head {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s-4);
-}
-
-.quick-title {
-  font-size: var(--fs-lg);
-  font-weight: 550;
-  letter-spacing: -0.02em;
-}
-
-.quick-target {
-  font-size: var(--fs-xs);
-  color: var(--ink-3);
-}
-
-.quick-context {
-  font-size: var(--fs-xs);
-  color: var(--ink-3);
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-}
-
-.quick-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  margin-top: var(--s-5);
-}
-
-.quick-actions .spacer {
-  flex: 1;
-}
-
-.quick .readout strong {
-  font-size: clamp(2.2rem, 10vw, 3rem);
-}
-
-.quick .counter-plus {
-  width: 76px;
-  height: 76px;
-  font-size: 1.8rem;
-}
-
-.quick .counter-minus {
-  width: 48px;
-  height: 48px;
-}
-
-.quick .choice {
-  padding: var(--s-5) var(--s-4);
-  font-size: var(--fs-md);
-}
-
-.quick .slider::-webkit-slider-thumb {
-  width: 34px;
-  height: 34px;
-  margin-top: -12px;
 }
 
 /* ------------------------------------------------------------- responsive */
 
-/* Tablet: the rail lifts onto the top as a compact band — rings, the day and
-   its numbers, then the week and the categories beside each other. The fields
-   keep three columns: a field never gets wider than it needs just because it
-   can. */
-@media (max-width: 1024px) {
+/* Tablet: the rail folds into a band across the top. */
+@media (max-width: 1180px) {
   .board {
     grid-template-columns: minmax(0, 1fr);
-    --row: clamp(62px, 7.8dvh, 86px);
+    grid-template-areas:
+      "rail"
+      "main"
+      "bar";
+    min-height: 0;
   }
+
   .rail {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas:
-      "rings read cats"
-      "rings week stats"
-      "actions actions actions";
+    grid-template-columns: auto minmax(0, 1.6fr) minmax(0, 1fr);
     align-items: center;
-    justify-content: normal;
-    gap: var(--s-4) var(--s-5);
-    padding-bottom: var(--s-2);
+    gap: var(--s-5);
   }
-  .rail-rings {
-    grid-area: rings;
-  }
-  .rail-rings .rings {
-    width: clamp(84px, 13vh, 132px);
-  }
-  .rail-read {
-    grid-area: read;
-  }
-  .cats {
-    grid-area: cats;
-  }
-  .week {
-    grid-area: week;
-  }
-  .rail-stats {
-    grid-area: stats;
-  }
-  .rail-actions {
-    grid-area: actions;
-  }
-  .week-bar {
-    height: 30px;
-  }
-}
 
-/* Phone: everything stacks, and the fields go to two columns. */
-@media (max-width: 700px) {
-  body[data-board="true"] .page {
-    padding: 8px 10px 12px;
+  .rail-top {
+    justify-items: start;
+    gap: 4px;
   }
-  .board {
-    gap: 5px;
-    --row: clamp(58px, 7.2dvh, 78px);
-    --gap: 5px;
-  }
-  .rail {
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas:
-      "rings read"
-      "cats cats"
-      "week week"
-      "stats stats"
-      "actions actions";
-    gap: var(--s-3) var(--s-4);
-  }
+
   .rail-rings .rings {
-    width: clamp(76px, 12vh, 104px);
+    width: clamp(96px, 13vh, 148px);
   }
-  .rail-note {
-    display: none;
-  }
-  .rail-meter {
-    display: none;
-  }
-  .week-cell {
-    padding: 4px 0 3px;
-  }
-  .week-bar {
-    height: 34px;
-  }
-  .tiles {
+
+  .rail-compare {
+    border-top: none;
+    padding-top: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .tile[data-tile="deep_blocks"],
-  .tile[data-tile="energy"] {
-    grid-column: span 2;
+
+  .rail-mid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: center;
   }
-  .tile {
-    padding: 6px 9px;
-  }
-  .band-head {
-    font-size: 9px;
+
+  .move {
+    align-content: start;
   }
 }
 
-/* Very narrow: one column of fields, one tile per row. */
+/* Two columns of cards get tight below this: one column of cards it is. */
+@media (max-width: 1000px) {
+  .main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-5);
+  }
+
+}
+
+/* Phone: one column, and the fields stack two at a time as long as it holds. */
+@media (max-width: 700px) {
+  body[data-board="true"] .page {
+    padding: 10px 12px 16px;
+  }
+
+  .rail {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: var(--s-5);
+  }
+
+  .rail-top {
+    justify-items: center;
+    width: 100%;
+  }
+
+  .rail-rings .rings {
+    width: min(62vw, 220px);
+  }
+
+  .rail-compare,
+  .rail-mid {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+  }
+
+  .rail-mid {
+    gap: var(--s-5);
+  }
+
+  .week-row {
+    width: 100%;
+  }
+
+  .cat-cards {
+    gap: 8px;
+  }
+
+  .card {
+    padding: 10px 12px;
+  }
+}
+
+/* Very narrow: one card per row, and nothing pretends to fit two. */
 @media (max-width: 460px) {
-  .tiles {
+  .cat-cards {
     grid-template-columns: minmax(0, 1fr);
   }
-  .tile[data-w="2"],
-  .tile[data-tile="deep_blocks"],
-  .tile[data-tile="energy"] {
+
+  .card[data-w="2"] {
     grid-column: span 1;
   }
 }
 
-/* A short window: keep the fields, spend the space on nothing else. */
-@media (max-height: 700px) {
+/* Short windows: keep the rail's numbers, drop the air. */
+@media (max-height: 760px) {
   .rail-rings .rings {
-    width: clamp(120px, 24vh, 200px);
+    width: clamp(130px, 24vh, 210px);
   }
-  .rail-note {
-    display: none;
+
+  .ins-steps {
+    min-height: 0;
   }
 }
 
-/* Tiles answer to their own size, not the window's: a short tile drops the
-   caption first, then the decorative chart, and always keeps the number. */
-@container tile (max-height: 44px) {
-  .tile-caption {
-    display: none;
+/* A wide, tall window gives every card its share of the height, so the
+   instruments can grow into the room they are given. The card's height is set
+   by the grid here, never by its own contents, which is what makes the size
+   queries below safe. */
+@media (min-width: 1181px) and (min-height: 861px) {
+  .board:not(.board--framed) {
+    min-height: calc(100dvh - var(--chrome-h) - 48px);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-content: stretch;
+  }
+
+  .cat-cards {
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  .card {
+    min-height: 0;
+  }
+
+  .card-value {
+    font-size: 1.75rem;
+  }
+
+  .ins-track {
+    max-height: 104px;
+  }
+
+  .ins-mark {
+    box-shadow: 0 0 0 4px var(--surface-2), 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .ins--scale[data-beyond="true"] .ins-mark {
+    box-shadow: inset 0 0 0 4px var(--accent), 0 0 0 4px var(--surface-2);
+  }
+
+  .ins-dashes {
+    max-height: 26px;
+  }
+
+  .step i {
+    min-height: 34px;
+  }
+
+  .night-track {
+    max-height: 16px;
+  }
+
+  .night-handle {
+    width: min(24px, 100%);
+    height: min(24px, 100%);
   }
 }
 
-@container tile (max-height: 36px) {
-  .tile-chart {
-    display: none;
+/* A narrow card puts its name on its own line and its number below, so a long
+   value never eats the label. The gap line is held to one line for the same
+   reason: a wrapped line would eat the instrument's room. */
+@container card (max-width: 208px) {
+  .card-gap {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    -webkit-line-clamp: 1;
   }
-}
 
-/* Very narrow tiles: the unit is the first thing to go. */
-@container tile (max-width: 168px) {
-  .tile-unit {
+  .card-head {
+    flex-wrap: wrap;
+    gap: 1px 5px;
+  }
+
+  .card-label {
+    flex: 0 0 100%;
+    font-size: 12px;
+  }
+
+  .card-value {
+    font-size: 1.4rem;
+  }
+
+  .card-points small {
     display: none;
   }
-  .tile-value {
-    font-size: clamp(0.85rem, 26cqh, 1.25rem);
+
+  .card-points[data-chip="true"] {
+    font-size: 10px;
+  }
+
+  .step span {
+    display: none;
   }
 }

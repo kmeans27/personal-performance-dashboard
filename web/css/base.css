@@ -151,6 +151,11 @@ ul {
   padding: var(--s-7) var(--pad-page) var(--s-9);
 }
 
+/* The demo is a whole dashboard, not an article: it gets the room it needs. */
+body[data-wide="true"] .page {
+  max-width: 1840px;
+}
+
 .section {
   margin-top: var(--s-8);
 }

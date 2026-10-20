@@ -43,19 +43,25 @@ def test_every_field_has_a_home_on_the_board(client):
         assert metric["id"] in covered, f"{metric['id']} is not on the board"
     for tile in board:
         assert tile["chart"] in CHARTS
-        assert 1 <= tile["w"] <= 2 and 1 <= tile["h"] <= 2
+        assert 1 <= tile["w"] <= 2
         assert tile["fields"], f"{tile['id']} draws from no field"
 
 
 def test_every_band_packs_into_full_rows(client):
-    """Three columns, and no band ends on a half-empty row: the board spends
-    its space on fields, never on gaps."""
+    """Two cards per row, and no column ends on a half-empty row: the board
+    spends its space on fields, never on gaps."""
     board = client.get("/api/schema").json()["board"]
 
     for category in ("body", "mind", "attention"):
-        cells = sum(tile["w"] * tile["h"] for tile in board if tile["category"] == category)
-        assert cells > 0
-        assert cells % 3 == 0, f"{category} leaves a half-empty row"
+        width = 0
+        for tile in board:
+            if tile["category"] != category:
+                continue
+            width += tile["w"]
+            if width == 2:
+                width = 0
+            assert width <= 2, f"{category} overflows a row at {tile['id']}"
+        assert width == 0, f"{category} leaves a half-empty row"
 
 
 def test_the_day_carries_the_week_around_it(client):
@@ -181,38 +187,115 @@ def test_tiles_carry_the_raw_values_they_draw_from(client):
     assert rhythm["values"] == {"bed_time": "22:45", "wake_time": "06:30"}
 
 
-def test_weight_trend_carries_recent_history(client):
-    today = date.today()
-    for offset, weight in ((3, 90.0), (2, 89.4), (1, 88.8)):
-        client.put(
-            f"/api/day/{(today - timedelta(days=offset)).isoformat()}",
-            json={"values": {"weight_kg": weight}},
-        )
-    client.put(f"/api/day/{today.isoformat()}", json={"values": {"weight_kg": 88.2}})
-    board = tiles(client)
-
-    weight = next(tile for tile in board["tiles"] if tile["id"] == "weight")
-    assert weight["series"][-1] == 88.2
-    assert len(weight["series"]) == 4
-
-
-def test_a_gauge_with_history_carries_only_its_window(client):
-    today = date.today()
-    # Ten nights of sleep: the sleep tile only draws a week of them.
-    for offset in range(10, 0, -1):
-        client.put(
-            f"/api/day/{(today - timedelta(days=offset)).isoformat()}",
-            json={"values": {"sleep_hours": 6.0 + offset / 10}},
-        )
-    client.put(f"/api/day/{today.isoformat()}", json={"values": {"sleep_hours": 7.5}})
-    board = tiles(client)
+def test_every_card_prices_itself_against_the_ring(client):
+    """A card knows what it is worth: its score out of ten, its weight in the
+    category, and what is still on the table."""
+    day = date.today().isoformat()
+    board = client.put(f"/api/day/{day}", json={"values": {"sleep_hours": 7.5}}).json()["board"]
 
     sleep = next(tile for tile in board["tiles"] if tile["id"] == "sleep")
-    assert len(sleep["series"]) == 7
-    assert sleep["series"][-1] == 7.5
-    # Pickups has no history to draw, and says so rather than guessing.
-    pickups = next(tile for tile in board["tiles"] if tile["id"] == "pickups")
-    assert pickups["series"] is None
+    assert sleep["weight"] == 0.26
+    assert sleep["score"] == 1.0
+    assert sleep["points"] == 10
+    assert sleep["stake"] == 0.0
+
+    steps = next(tile for tile in board["tiles"] if tile["id"] == "steps")
+    assert steps["weight"] == 0.18
+    assert steps["score"] is None
+    assert steps["points"] is None
+    assert steps["stake"] == round(0.18 * 100 / 3, 2)
+
+    # The body weights add up to the third of the score the category is worth.
+    body = [tile for tile in board["tiles"] if tile["category"] == "body" and tile["weight"]]
+    assert round(sum(tile["weight"] for tile in body), 4) == 1.0
+
+
+def test_unscored_cards_say_so(client):
+    board = tiles(client)
+    for tile_id in ("mood", "energy", "creatine", "weight"):
+        tile = next(entry for entry in board["tiles"] if entry["id"] == tile_id)
+        assert tile["weight"] is None
+        assert tile["points"] is None
+        assert tile["stake"] is None
+
+
+def test_the_next_move_is_the_open_card_worth_the_most(client):
+    day = date.today().isoformat()
+    empty = tiles(client)
+    # Nothing logged: the card worth most of the score is the one to open.
+    assert empty["next_move"]["id"] == "deep_blocks"
+    assert empty["next_move"]["points"] == 17
+    assert empty["next_move"]["label"] == "Deep blocks"
+    assert empty["next_move"]["line"]
+
+    # Log three deep blocks and it is no longer a move, but the one after is.
+    board = client.put(f"/api/day/{day}", json={"values": {"deep_blocks": 3}}).json()["board"]
+    assert board["next_move"]["id"] != "deep_blocks"
+    assert board["next_move"]["points"] <= 17
+
+
+def test_gap_lines_say_where_today_sits(client):
+    day = date.today().isoformat()
+    board = client.put(
+        f"/api/day/{day}",
+        json={"values": {"sleep_hours": 6, "steps": 6000, "screen_hours": 4.5, "pickups": 71}},
+    ).json()["board"]
+    gap = {tile["id"]: tile["gap"] for tile in board["tiles"]}
+
+    assert gap["sleep"] == "1h short of target"
+    assert gap["steps"] == "3,000 to go"
+    assert gap["screen_hours"] == "1.5h over your limit"
+    assert gap["pickups"] == "11 over your limit"
+    # An unlogged card states its target instead of inventing a gap.
+    assert gap["outdoor"] == "20 min outside"
+
+
+def test_a_card_carries_yesterday_and_the_usual(client):
+    today = date.today()
+    for offset in (1, 2, 3):
+        client.put(
+            f"/api/day/{(today - timedelta(days=offset)).isoformat()}",
+            json={"values": {"sleep_hours": 6.0 + offset / 2, "mood": 3}},
+        )
+    board = client.put(
+        f"/api/day/{today.isoformat()}", json={"values": {"sleep_hours": 7.5}}
+    ).json()["board"]
+
+    sleep = next(tile for tile in board["tiles"] if tile["id"] == "sleep")
+    assert sleep["yesterday"] == 6.5
+    mood = next(tile for tile in board["tiles"] if tile["id"] == "mood")
+    assert mood["usual"] == 3.0
+    assert sleep["usual"] == 7.0
+
+
+def test_the_week_carries_yesterday_against_the_usual(client):
+    today = date.today()
+    for offset in range(1, 6):
+        client.put(
+            f"/api/day/{(today - timedelta(days=offset)).isoformat()}",
+            json={"values": FULL_DAY},
+        )
+    payload = client.put(f"/api/day/{today.isoformat()}", json={"values": FULL_DAY}).json()
+
+    compare = payload["compare"]
+    assert compare["yesterday"] == payload["score"]["total"]
+    assert compare["usual_days"] == 5
+    # Five similar days: the usual is near today, never exactly it.
+    assert abs(compare["usual"] - payload["score"]["total"]) < 0.02
+
+
+def test_the_clean_day_card_carries_its_thirty_dashes(client):
+    today = date.today()
+    client.put(f"/api/day/{(today - timedelta(days=1)).isoformat()}", json={"values": {"avoid_habit": True}})
+    board = client.put(f"/api/day/{today.isoformat()}", json={"values": {"avoid_habit": True}}).json()["board"]
+
+    habit = next(tile for tile in board["tiles"] if tile["id"] == "avoid_habit")
+    assert habit["chart"] == "bar"
+    assert len(habit["days"]) == 30
+    assert habit["days"][-1] == {"day": today.isoformat(), "clean": True}
+    assert habit["days"][-2]["clean"] is True
+    assert habit["days"][-3]["clean"] is False
+    assert habit["gap"] == "2 of 30 days"
 
 
 def test_habit_name_from_settings_reaches_the_tile(client):

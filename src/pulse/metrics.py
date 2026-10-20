@@ -26,7 +26,7 @@ class Category:
 CATEGORIES: tuple[Category, ...] = (
     Category("body", "Body", "#43D6A0", "The machine you live in."),
     Category("mind", "Mind", "#7D93F5", "Deliberate thinking and learning."),
-    Category("attention", "Attention", "#F2A94E", "Where your hours actually go."),
+    Category("attention", "Attention", "#5AA9F0", "Where your hours actually go."),
 )
 
 INNER_ORDER = ("body", "mind", "attention")  # outer -> inner ring
@@ -235,8 +235,8 @@ METRICS: tuple[Metric, ...] = (
         min=1,
         max=5,
         labels=("rough", "low", "ok", "good", "great"),
-        prompt="How is your mood?",
-        help="Not scored. This is the outcome the insights watch.",
+        prompt="How was today overall?",
+        help="Not in the score. This is the outcome the insights watch.",
         scored=False,
     ),
     _m(
@@ -247,7 +247,7 @@ METRICS: tuple[Metric, ...] = (
         input="scale",
         min=1,
         max=5,
-        labels=("empty", "low", "steady", "good", "fully charged"),
+        labels=("empty", "low", "steady", "good", "full"),
         prompt="How much energy do you have?",
         scored=False,
     ),
@@ -285,7 +285,7 @@ METRICS: tuple[Metric, ...] = (
     ),
     _m(
         id="avoid_habit",
-        label="Stay clean",
+        label="Clean day",
         category="attention",
         scorer="avoid",
         weight=0.30,
@@ -312,11 +312,10 @@ METRIC_INDEX = {m.id: m for m in METRICS}
 #   switch    a yes/no that must look unmistakably answered (greens, creatine)
 #   scale     a felt 1–5 (mood, energy)
 #   night     a window across the day (bed time -> wake time)
-#   trend     a number against its own history (weight)
 #
-#   w, h    how many columns and rows of the board grid the field takes.
-#           Deliberately small: a yes/no is one cell, a gauge is two by two.
-#           The board spends its pixels on content, not on empty boxes.
+#   w    how many of the category column's two card slots the field takes.
+#        A switch is one slot; anything with a track or a timeline is two.
+#        Each category's widths must add up to whole rows of two.
 #   track   the axis a range chart draws on: (from, to)
 #   zone    the part of that axis that counts as good
 #   weekly  weekly fields wait for the week; they never show a daily zero
@@ -328,8 +327,7 @@ class Tile:
     category: str
     chart: str
     fields: tuple[str, ...]
-    w: int = 1  # grid columns
-    h: int = 1  # grid rows
+    w: int = 1  # card slots in its category column (1 or 2)
     label: str = ""  # falls back to the field's own label
     target: str = ""
     unit: str = ""  # falls back to the field's own unit
@@ -339,59 +337,63 @@ class Tile:
     cap: float | None = None  # the value that means "full", when nothing else scores it
     track: tuple[float, float] | None = None  # range charts only
     zone: tuple[float, float] | None = None  # the good part of the track
-    history: int = 0  # days of recent values a trend chart wants
 
 
-# The spans below pack each band's column count exactly — Body 9 fields into
-# 4 rows of 3, Mind 5 into 2, Attention 3 into 2 — so no band ever ends on a
-# half-empty row. Two fields earn a second column because of what they *are*:
-# a switch with a written note needs the room, and a running number needs a
-# track to run along. Everything else is one cell, which is the point.
+# Each category is one column, two cards wide, and every row below is full:
+# Body 6 rows, Mind 4, Attention 3. A yes/no takes one slot, side by side with
+# its neighbour; anything with a scale, a timeline or thirty days takes two.
+# Nothing here is sized by "importance" — it is sized by what it has to draw.
 
 TILES: tuple[Tile, ...] = (
     # --------------------------------------------------------------- body
     Tile(
-        "sleep", "body", "range", ("sleep_hours",), w=2, h=2,
-        target="Target 7–9 h", track=(0, 12), zone=(7, 9), history=7,
+        "sleep", "body", "range", ("sleep_hours",), w=2,
+        label="Slept", target="Target 7–9 h", track=(0, 12), zone=(7, 9),
     ),
-    Tile("steps", "body", "bar", ("steps",), target="9,000 steps is the bar"),
-    Tile("gym", "body", "segments", ("gym",), cells=3, weekly=True, label="Gym this week", unit="sessions"),
+    Tile("steps", "body", "bar", ("steps",), target="Target 9,000 steps"),
+    Tile(
+        "gym", "body", "segments", ("gym",), cells=3, weekly=True,
+        label="Gym", unit="sessions",
+    ),
     Tile(
         "alcohol", "body", "segments", ("alcohol",), cells=7,
         weekly=True, label="Alcohol-free", unit="days",
     ),
-    Tile("greens", "body", "switch", ("greens",), label="Greens", target="Fruit or veg today"),
     Tile("outdoor", "body", "bar", ("outdoor",), target="20 min outside"),
-    Tile("creatine", "body", "switch", ("creatine",), label="Creatine", target="The daily one"),
+    Tile("greens", "body", "switch", ("greens",), label="Greens", target="Fruit or veg today"),
+    Tile("creatine", "body", "switch", ("creatine",), label="Creatine", target="5 g, once a day"),
     Tile(
-        "weight", "body", "trend", ("weight_kg",), optional=True,
-        label="Weight", target="Against your goal", history=21,
+        "weight", "body", "range", ("weight_kg",), w=2, optional=True,
+        label="Weight", target="Against your goal", track=(60, 110),
     ),
-    Tile("rhythm", "body", "night", ("bed_time", "wake_time"), label="Rhythm", target="Bed and wake time"),
+    Tile(
+        "rhythm", "body", "night", ("bed_time", "wake_time"), w=2,
+        label="In bed", target="Bed and wake time",
+    ),
     # --------------------------------------------------------------- mind
     Tile(
-        "deep_blocks", "mind", "blocks", ("deep_blocks",), cells=3,
-        label="Deep blocks", target="Three is a full day",
-    ),
-    Tile(
-        "learned", "mind", "switch", ("learned", "learned_what"), w=2,
-        label="Learned", target="The one thing you learned",
+        "deep_blocks", "mind", "blocks", ("deep_blocks",), w=2, cells=3,
+        label="Deep blocks", target="A full day",
     ),
     Tile("read", "mind", "switch", ("read",), label="Read", target="Ten minutes"),
-    Tile("mood", "mind", "scale", ("mood",), label="Mood", target="How the day felt"),
-    Tile("energy", "mind", "scale", ("energy",), label="Energy", target="What was in the tank"),
+    Tile(
+        "learned", "mind", "switch", ("learned", "learned_what"), label="Learned",
+        target="What you learned",
+    ),
+    Tile("mood", "mind", "scale", ("mood",), w=2, label="Mood", target="How was today overall?"),
+    Tile("energy", "mind", "scale", ("energy",), w=2, label="Energy", target="What was in the tank"),
     # ---------------------------------------------------------- attention
     Tile(
-        "screen_hours", "attention", "range", ("screen_hours",), w=2, h=2,
-        label="Screen time", target="Under 3 h", track=(0, 8), zone=(0, 3), history=7,
+        "screen_hours", "attention", "range", ("screen_hours",), w=2,
+        label="Screen time", target="Under 3 h", track=(0, 8), zone=(0, 3),
     ),
     Tile(
-        "pickups", "attention", "range", ("pickups",),
+        "pickups", "attention", "range", ("pickups",), w=2,
         label="Pickups", target="Under 60", track=(0, 150), zone=(0, 60),
     ),
     Tile(
-        "avoid_habit", "attention", "bar", ("avoid_habit",),
-        weekly=True, target="30 days clean", unit="days",
+        "avoid_habit", "attention", "bar", ("avoid_habit",), w=2,
+        weekly=True, label="Clean day", target="Days clean in the last 30",
     ),
 )
 

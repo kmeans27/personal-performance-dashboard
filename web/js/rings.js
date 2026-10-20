@@ -86,6 +86,8 @@ export function createRings({ caption = "", centre = true, className = "rings" }
       const group = groups.get(id);
       group.dataset.focus = focus === id ? "true" : "false";
       group.dataset.empty = score == null ? "true" : "false";
+      // The glow is the score, made visible: brighter in, quieter out.
+      group.style.setProperty("--glow", `${(1.5 + (score ?? 0) * 6).toFixed(1)}px`);
     }
     const value = total == null ? null : Math.round(total * 100);
     scoreNode.dataset.empty = value == null ? "true" : "false";

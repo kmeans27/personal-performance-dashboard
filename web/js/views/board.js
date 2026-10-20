@@ -1,187 +1,172 @@
-/* The board: every field for one day, one screen, nothing to scroll.
-   The left third is what the day *means* — rings, the three categories, the
-   week so far and a few honest numbers. The right two thirds are the fields
-   themselves: small, uniform boxes, one per thing you log. Tap a tile, log it,
-   watch it light up. */
+/* The board: today, one screen, nothing to scroll.
+   A left rail says what the day means — the ring, where it is going, and the
+   week so far. The rest is the cards themselves: three category columns, every
+   field in its own instrument, logged where it is read. The bar along the
+   bottom shows where the score comes from, one segment per field, sized by
+   what the field is worth. */
 
 import { h, mount } from "../core/dom.js";
-import { createRings } from "../rings.js";
-import { createTile } from "../components/tile.js";
-import { openQuickLog } from "../components/quickLog.js";
+import { createRings, microRings } from "../rings.js";
+import { createCard } from "../components/card.js";
 import { openDaySheet } from "../components/daySheet.js";
-import { categoryMap, metricMap } from "../core/catalogue.js";
+import { categoryMap } from "../core/catalogue.js";
 import { dayOfMonth, longDay, points, weekdayInitial } from "../core/format.js";
 import { api, demoApi } from "../core/api.js";
+import { toast } from "../core/chrome.js";
 
 export function boardView({
   payload,
   schema,
-  suggestion = new Map(),
   demo = false,
   framed = false,
   onSelectDay,
   onPayload,
 }) {
   const categories = categoryMap(schema);
-  const metrics = metricMap(schema);
   const accents = new Map(schema.categories.map((category) => [category.id, category.accent]));
-  const tiles = new Map();
-  const bandCounts = new Map();
+  const cards = new Map();
+  const catNodes = new Map();
+  const weekCells = new Map();
+  const segments = new Map();
+  let weekAverage = null;
 
-  const rings = createRings({ caption: demo ? "Demo day" : "" });
+  const rings = createRings();
   rings.setScores(payload.score);
   requestAnimationFrame(() => rings.settleNow());
 
-  const countLine = h("p", { class: "rail-count" });
-  const meter = h("div", { class: "rail-meter" }, h("i"));
-  const note = h("p", { class: "rail-note" });
-  const catRows = new Map();
-  const weekCells = new Map();
-  const statCells = new Map();
-
   const board = h("div", {
     class: framed ? "board board--framed" : "board",
-    "data-complete": "false",
     "data-demo": String(demo),
   });
 
-  /* ------------------------------------------------------------ the rail */
+  /* ------------------------------------------------------------- the rail */
 
-  const cats = h("div", { class: "cats" });
-  for (const categoryId of schema.ring_order) {
-    const fill = h("i");
-    const score = h("span", { class: "cat-score num" }, "—");
-    catRows.set(categoryId, { fill, score });
-    cats.append(
-      h(
-        "div",
-        { class: "cat-row", style: { "--accent": accents.get(categoryId) } },
-        h("span", { class: "cat-label" }, categories.get(categoryId).label),
-        h("span", { class: "cat-bar" }, fill),
-        score
-      )
-    );
-  }
-
-  const week = h("div", { class: "week" });
-  buildWeek();
-
-  const stats = h("div", { class: "rail-stats" });
-  for (const [key, label] of [
-    ["average", "Week average"],
-    ["logged", "Days logged"],
-    ["best", "Best day"],
-  ]) {
-    const value = h("span", { class: "rail-stat-value num" }, "—");
-    statCells.set(key, value);
-    stats.append(
-      h(
-        "div",
-        { class: "rail-stat" },
-        h("span", { class: "rail-stat-label" }, label),
-        value
-      )
-    );
-  }
+  const dateLine = h("p", { class: "rail-date" }, longDay(payload.day));
+  const compare = h("div", { class: "rail-compare" });
+  const move = h("section", { class: "move", "data-empty": "true" });
+  const week = h("section", { class: "week" });
 
   const rail = h(
     "aside",
     { class: "rail" },
-    h("div", { class: "rail-rings" }, rings.el),
-    h(
-      "div",
-      { class: "rail-read" },
-      h("p", { class: "rail-day" }, demo ? "A lived-in demo" : longDay(payload.day)),
-      countLine,
-      meter,
-      note
-    ),
-    cats,
-    week,
-    stats,
-    h(
-      "div",
-      { class: "rail-actions" },
-      demo
-        ? h("a", { class: "btn btn--quiet", href: "/log" }, "Try the logging flow")
-        : h("a", { class: "btn btn--primary", href: `/log?day=${payload.day}` }, "Log everything"),
-      h("a", { class: "btn btn--quiet", href: "/calendar" }, "Calendar")
-    )
+    h("div", { class: "rail-top" }, dateLine, h("div", { class: "rail-rings" }, rings.el)),
+    h("div", { class: "rail-mid" }, compare, move),
+    week
   );
 
-  /* ---------------------------------------------------------- the fields */
+  /* ------------------------------------------------------------ the cards */
 
-  const bands = schema.ring_order.map((categoryId) => {
+  const main = h("main", { class: "main" });
+  for (const categoryId of schema.ring_order) {
     const category = categories.get(categoryId);
-    const count = h("span", { class: "band-count num" });
-    bandCounts.set(categoryId, count);
-    const grid = h("div", { class: "tiles" });
+    const count = h("span", { class: "cat-count num" });
+    const score = h("span", { class: "cat-score num" }, "—");
+    const grid = h("div", { class: "cat-cards" });
     for (const tile of payload.board.tiles.filter((entry) => entry.category === categoryId)) {
-      const component = createTile(tile, {
+      const card = createCard(tile, {
         accent: accents.get(categoryId),
-        onOpen: () => openQuickLog({
-          tile: currentTile(tile.id),
-          category,
-          metrics,
-          values: payload.values,
-          day: payload.day,
-          suggestion: suggestionObject(tile),
-          save,
-          onSaved: setPayload,
-          demo,
-        }),
+        locked: demo,
+        onSave: (values) => save(tile.id, values),
       });
-      tiles.set(tile.id, component);
-      grid.append(component.el);
+      cards.set(tile.id, card);
+      grid.append(card.el);
     }
-    return h(
+    const section = h(
       "section",
-      { class: "band", "data-category": categoryId, "data-accent": categoryId },
+      { class: "cat", "data-category": categoryId, "data-accent": categoryId },
       h(
         "header",
-        { class: "band-head" },
-        h("span", { class: "dot" }),
-        h("span", {}, category.label),
-        h("span", { class: "rule" }),
-        count
+        { class: "cat-head" },
+        h("span", { class: "cat-dot" }),
+        h("span", { class: "cat-name" }, category.label),
+        count,
+        score
       ),
       grid
     );
-  });
+    catNodes.set(categoryId, { score, count, section });
+    main.append(section);
+  }
 
-  mount(board, rail, h("div", { class: "fields" }, ...bands));
+  /* ------------------------------------------------------- the score bar */
+
+  const readout = h("span", { class: "seg-readout" });
+  const segmentsRow = h("div", { class: "segments" });
+  const breakdown = h(
+    "footer",
+    { class: "breakdown" },
+    h("p", { class: "eyebrow" }, "Where your score comes from", readout),
+    segmentsRow
+  );
+
+  buildSegments();
+  buildWeek();
+  mount(board, rail, main, breakdown);
   setPayload(payload);
 
-  return { el: board, setPayload, tiles };
+  return { el: board, setPayload, cards };
 
   // -------------------------------------------------------------- internals
 
-  function currentTile(id) {
-    return payload.board.tiles.find((entry) => entry.id === id);
+  async function save(fieldId, values) {
+    if (demo) return;
+    try {
+      const next = await api.saveDay(payload.day, values);
+      setPayload(next);
+    } catch (error) {
+      toast(`Not saved: ${error.message}`, "attention");
+    }
   }
 
-  function suggestionObject(tile) {
-    const out = {};
-    for (const field of tile.fields) out[field] = suggestion.get(field);
-    return out;
+  /** Navigation, never logging: bring a card into view and let it pulse. */
+  function reveal(id) {
+    cards.get(id)?.reveal();
   }
 
-  async function save(fieldId, value) {
-    const next = await api.saveDay(payload.day, { [fieldId]: value });
-    setPayload(next);
-    return next;
+  function buildSegments() {
+    for (const tile of payload.board.tiles) {
+      if (tile.weight == null) continue;
+      const fill = h("span", { class: "seg-fill" });
+      const group = (categories.get(tile.category) || {}).label || tile.category;
+      const segment = h(
+        "button",
+        {
+          type: "button",
+          class: "seg",
+          "data-card": tile.id,
+          style: { flexGrow: String(tile.weight), "--accent": accents.get(tile.category) },
+          title: `${tile.label} — ${group}`,
+          onclick: () => reveal(tile.id),
+          onmouseenter: () => describe(tile, group),
+          onfocus: () => describe(tile, group),
+          onmouseleave: () => readout.replaceChildren(),
+          onblur: () => readout.replaceChildren(),
+        },
+        fill
+      );
+      segments.set(tile.id, { segment, fill });
+      segmentsRow.append(segment);
+    }
+  }
+
+  function describe(tile, group) {
+    const share = Math.round((tile.weight / 3) * 100);
+    mount(
+      readout,
+      h("b", {}, tile.label),
+      ` · ${group} · ${share}% of the score · ${tile.points == null ? "not scored" : `${tile.points}/10`}`
+    );
   }
 
   /* The week strip is built once — the board never changes the day it shows —
-     then only its bars move when a day gets its score. */
+     then only its rings move when a day gets its score. */
   function buildWeek() {
     const fetchDay = demo ? (day) => demoApi.day(day) : (day) => api.day(day);
-    const days = payload.week || [];
     const track = h(
       "div",
-      { class: "week-track" },
-      days.map((entry) => {
-        const fill = h("i", { class: "week-fill" });
+      { class: "week-row" },
+      (payload.week || []).map((entry) => {
+        const ring = h("span", { class: "week-ring" });
         const cell = h(
           "button",
           {
@@ -196,84 +181,113 @@ export function boardView({
             },
           },
           h("span", { class: "week-letter" }, weekdayInitial(entry.day)),
-          h("span", { class: "week-bar" }, fill),
+          ring,
           h("span", { class: "week-date num" }, String(dayOfMonth(entry.day)))
         );
-        weekCells.set(entry.day, { fill, cell });
+        weekCells.set(entry.day, { ring, cell });
         return cell;
       })
     );
-    mount(week, h("p", { class: "eyebrow" }, "This week"), track);
+    const average = h("b", { class: "num week-avg" }, "—");
+    mount(
+      week,
+      h("p", { class: "eyebrow" }, "This week", average),
+      track
+    );
+    weekAverage = average;
   }
 
   function setPayload(next) {
     payload = next;
-    rings.setScores(next.score);
-
     const boardData = next.board;
+    rings.setScores(next.score);
     board.dataset.complete = String(boardData.complete);
 
-    mount(
-      countLine,
-      boardData.complete ? h("span", { class: "dot" }) : null,
-      boardData.complete
-        ? "Every field logged."
-        : `${boardData.daily_logged} of ${boardData.daily_total} logged today`
-    );
-    countLine.dataset.complete = String(boardData.complete);
+    const missing = schema.ring_order.filter((id) => next.score.categories?.[id] == null);
+    const provisional = missing.length > 0 && next.score.total != null;
+    rings.setCaption(provisional ? "so far" : "");
 
-    const ratio = boardData.daily_total ? boardData.daily_logged / boardData.daily_total : 0;
-    meter.firstChild.style.width = `${Math.round(ratio * 100)}%`;
-    meter.dataset.complete = String(boardData.complete);
-
-    const focus = next.focus;
-    const message = boardData.complete ? next.closing : focus?.line;
-    note.dataset.show = message ? "true" : "false";
-    note.dataset.complete = String(boardData.complete);
-    note.style.setProperty("--accent", focus?.accent || "var(--overall)");
     mount(
-      note,
-      focus && !boardData.complete ? h("span", { class: "dot" }) : null,
-      message ? h("span", {}, message) : null
+      compare,
+      compareCell("Yesterday", next.compare?.yesterday),
+      compareCell("Usual", next.compare?.usual)
     );
 
-    for (const categoryId of schema.ring_order) {
-      const row = catRows.get(categoryId);
-      const score = next.score.categories?.[categoryId];
-      row.fill.style.width = score == null ? "0%" : `${Math.round(score * 100)}%`;
-      row.score.textContent = points(score);
-      row.score.dataset.empty = String(score == null);
+    const moveData = boardData.next_move;
+    move.dataset.empty = String(!moveData);
+    if (moveData) {
+      move.style.setProperty("--accent", accents.get(moveData.category) || "var(--amber)");
+      mount(
+        move,
+        h("p", { class: "eyebrow eyebrow--amber" }, "Next best move"),
+        h(
+          "button",
+          { type: "button", class: "move-card", onclick: () => reveal(moveData.id) },
+          h(
+            "span",
+            { class: "move-head" },
+            h("span", { class: "move-label" }, moveData.label),
+            h("span", { class: "move-points num" }, `+${moveData.points}`)
+          ),
+          h("span", { class: "move-line" }, moveData.line),
+          h("span", { class: "move-go" }, "Show card")
+        )
+      );
+    } else {
+      mount(
+        move,
+        h("p", { class: "eyebrow eyebrow--amber" }, "Next best move"),
+        h(
+          "div",
+          { class: "move-card move-card--clear" },
+          h("span", { class: "move-head" }, h("span", { class: "move-label" }, "Everything that counts is in")),
+          h("span", { class: "move-line" }, "Nothing left that would move the score today.")
+        )
+      );
     }
 
     for (const entry of next.week || []) {
       const slot = weekCells.get(entry.day);
       if (!slot) continue;
-      slot.fill.style.height = entry.logged && typeof entry.total === "number"
-        ? `${Math.max(6, Math.round(entry.total * 100))}%`
-        : "0%";
+      mount(slot.ring, microRings(entry.categories || {}, { size: 30, stroke: 2.4 }));
       slot.cell.dataset.empty = String(!entry.logged);
       slot.cell.title = `${longDay(entry.day)} — ${points(entry.total)}`;
     }
-
     const logged = (next.week || []).filter((entry) => entry.logged);
     const totals = logged.map((entry) => entry.total).filter((value) => typeof value === "number");
-    statCells.get("average").textContent = totals.length
+    weekAverage.textContent = totals.length
       ? points(totals.reduce((sum, value) => sum + value, 0) / totals.length)
       : "—";
-    statCells.get("logged").textContent = `${logged.length} of 7`;
-    statCells.get("best").textContent = totals.length ? points(Math.max(...totals)) : "—";
+
+    for (const categoryId of schema.ring_order) {
+      const node = catNodes.get(categoryId);
+      const tiles = boardData.tiles.filter((tile) => tile.category === categoryId);
+      const settled = tiles.filter((tile) => tile.settled).length;
+      node.count.textContent = `${settled}/${tiles.length}`;
+      const score = next.score.categories?.[categoryId];
+      node.score.textContent = points(score);
+      node.score.dataset.empty = String(score == null);
+      node.section.dataset.complete = String(tiles.length > 0 && settled === tiles.length);
+    }
 
     for (const tile of boardData.tiles) {
-      tiles.get(tile.id)?.update(tile);
+      cards.get(tile.id)?.update(tile);
+      const segment = segments.get(tile.id);
+      if (!segment) continue;
+      segment.fill.style.width = `${Math.round((tile.score ?? 0) * 100)}%`;
+      segment.segment.dataset.logged = tile.settled || tile.state !== "empty" ? "true" : "false";
+      segment.segment.dataset.open = tile.progress != null && tile.progress < 1 ? "true" : "false";
     }
-    for (const [categoryId, node] of bandCounts) {
-      const daily = boardData.tiles.filter(
-        (tile) => tile.category === categoryId && !tile.weekly && !tile.optional
-      );
-      const settled = daily.filter((tile) => tile.settled).length;
-      node.textContent = `${settled} / ${daily.length}`;
-      node.parentElement.parentElement.dataset.complete = String(daily.length > 0 && settled === daily.length);
-    }
+
     onPayload?.(next);
+  }
+
+  function compareCell(label, value) {
+    return h(
+      "div",
+      { class: "compare-cell" },
+      h("span", { class: "compare-label" }, label),
+      h("span", { class: "compare-value num" }, points(value))
+    );
   }
 }

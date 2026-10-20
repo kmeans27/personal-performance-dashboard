@@ -8,7 +8,7 @@ from typing import Any
 from . import db
 
 DEFAULT_SETTINGS: dict[str, Any] = {
-    "avoid_habit_name": "Stay clean",
+    "avoid_habit_name": "Clean day",
     "gym_target": 2.5,
     "weight_goal": None,
     "week_starts_on": "monday",

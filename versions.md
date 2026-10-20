@@ -9,14 +9,15 @@ top of the [README](README.md); this file is the full ledger.
 | [v0.2](v0.2.md) | One screen | ✅ Done | The board as the new home page: every field for today on one non-scrolling screen, sized by importance, tap a tile to log it in place. Phone access over the LAN. |
 | [v2.1](v2.1.md) | The UI pass | ✅ Done | Every field is answerable again, one field is retired, and every chart is redrawn in the shape its own data has — no more small circle in a big rectangle. New three-band layout, quieter palette, three rings. |
 | [v2.1.1](v2.1.1.md) | The density pass | ✅ Done | Nothing stretches to fill the screen any more: a field is as big as what it holds, three packed columns instead of two loose ones, and the space saved goes to the left third — category bars, a Mon–Sun week strip and three honest numbers. |
-| [v2.2](v2.2.md) | Log it on the board | 🚧 Planned | Answer directly on the dashboard: drag the slider, tap the counter, flip the switch. No sheet, no second thought. |
+| [v2.1.2](v2.1.2.md) | The home screen rework | ✅ Done | One screen of instruments: a rail with ring, score, yesterday, usual, next best move and the week; three category columns; a score bar along the bottom. Every card shows today against its target in one line of plain words, and the cards are the only inputs — the quick-log sheet is gone. |
+| [v2.2](v2.2.md) | Log it on the board | 🚧 Planned | Undo, and pointer polish. The gestures themselves shipped early, in v2.1.2. |
 
 ## Numbering
 
 The first two releases were numbered `0.1` and `0.2`. From here the release name
 *is* the roadmap name, so the package version follows it: v2.1 ships as `2.1.0`
 and v2.2 as `2.2.0`. A pass *on* a release keeps its number and adds a patch:
-v2.1.1 is the density pass on v2.1's screen. There was no `1.0` or `2.0` — the
+v2.1.2 is the home screen rework on v2.1.1's screen. There was no `1.0` or `2.0` — the
 roadmap started at two.
 
 ## What lives where
@@ -27,5 +28,6 @@ roadmap started at two.
 | [v0.2.md](v0.2.md) | The board spec, as shipped. |
 | [v2.1.md](v2.1.md) | The presentation of every field, and why each chart is the shape it is. |
 | [v2.1.1.md](v2.1.1.md) | The density pass: how big each field is, and what fills the left third. |
-| [v2.2.md](v2.2.md) | The next release: answering on the board itself. |
+| [v2.1.2.md](v2.1.2.md) | The home screen rework: the rail, the three columns, every instrument, and the score bar. Also `design-pass-v2.1.2.md`, the brief it answered. |
+| [v2.2.md](v2.2.md) | The next release: the rest of answering on the board — undo and pointer polish. |
 | Project-definition-human-nametbd.md | The original brief, kept for reference. |
