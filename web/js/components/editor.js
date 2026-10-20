@@ -175,7 +175,8 @@ export function openCardEditor(initial, context) {
     help.hidden = !tile.help;
     // Say each thing once: the prompt is already above, and a widget that
     // counts for itself already said the number in the body.
-    const repeats = tile.gap === tile.prompt || tile.gap === widget.summary?.();
+    const repeats =
+      tile.gap === tile.prompt || tile.gap === widget.summary?.() || widget.silentGap?.();
     gap.textContent = tile.gap || "";
     gap.hidden = !tile.gap || repeats;
     const wanted = tile.target_label && tile.target_label.startsWith("Target");
@@ -931,5 +932,14 @@ function bedEditor(tile, ctx, onSaved) {
   });
 
   paint();
-  return { el, sync: () => { value = read(); paint(); } };
+  return {
+    el,
+    sync: () => {
+      value = read();
+      paint();
+    },
+    // The body owns the sentence for this card — the axis and the wake line
+    // already say everything the footer could.
+    silentGap: () => true,
+  };
 }
