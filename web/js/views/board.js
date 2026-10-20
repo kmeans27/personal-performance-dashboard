@@ -81,7 +81,34 @@ export function boardView({
     const count = h("span", { class: "cat-count num" });
     const score = h("span", { class: "cat-score num" }, "—");
     const grid = h("div", { class: "cat-cards" });
+    /* A column is a stack of rows, and a row is a pair of cards: Steps sits
+       beside Gym, Read beside Learned. The plan — how many rows a column
+       has, and how tall each one is — lives in board.css. */
+    let row = null;
+    let used = 0;
+    let pending = [];
+
+    /* A note belongs to the pair it annotates, so it waits until the row is
+       complete and then opens under it, full width. */
+    const closeRow = () => {
+      if (!row) return;
+      for (const tile of pending) {
+        const noteRow = createNoteRow(tile);
+        notes.set(tile.id, noteRow);
+        row.append(noteRow.el);
+      }
+      row = null;
+      used = 0;
+      pending = [];
+    };
+
     for (const tile of payload.board.tiles.filter((entry) => entry.category === categoryId)) {
+      const span = tile.w || 1;
+      if (!row || used + span > 2) {
+        closeRow();
+        row = h("div", { class: "card-row" });
+        grid.append(row);
+      }
       const card = createCard(tile, {
         accent: accents.get(categoryId),
         locked: demo,
@@ -89,13 +116,12 @@ export function boardView({
         onOpen: () => openEditor(tile.id, categoryId),
       });
       cards.set(tile.id, card);
-      grid.append(card.el);
-      if (tile.note) {
-        const row = createNoteRow(tile);
-        notes.set(tile.id, row);
-        grid.append(row.el);
-      }
+      row.append(card.el);
+      used += span;
+      if (tile.note) pending.push(tile);
+      if (used >= 2) closeRow();
     }
+    closeRow();
     const section = h(
       "section",
       { class: "cat", "data-category": categoryId, "data-accent": categoryId },

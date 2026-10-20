@@ -232,7 +232,7 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
             "screen_hours": 2.5,
             "pickups": 44,
             "main_task": True,
-            "main_task_what": "Finish the v2.2.3 desktop pass",
+            "main_task_what": "Finish the v2.2.4 desktop pass",
             "avoid_habit": True,
         }
     )

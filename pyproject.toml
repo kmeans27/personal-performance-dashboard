@@ -1,6 +1,6 @@
 [project]
 name = "pulse"
-version = "2.2.3"
+version = "2.2.4"
 description = "Pulse — a personal performance dashboard. One glance, three rings, one score."
 readme = "README.md"
 requires-python = ">=3.11"

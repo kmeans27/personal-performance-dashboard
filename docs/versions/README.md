@@ -20,13 +20,14 @@ Pulse has been built in passes, and they stack:
 - **2.4 – 3.1 — yours.** Card settings, then the layout builder, then the polish.
 
 If you read only three files: [v2.1](v2.1.md) for why a field looks the way it
-does, [v2.2.2](v2.2.2.md) for the editor, and [v2.2.3](v2.2.3.md) for the board
+does, [v2.2.2](v2.2.2.md) for the editor, and [v2.2.4](v2.2.4.md) for the board
 as it is today.
 
 ## 2.2 — the editor
 
 | Version | Name | What it changed |
 | ------- | ---- | --------------- |
+| [v2.2.4](v2.2.4.md) | Desktop fill | The columns fill the height they have. A column is a stack of rows, a row is a pair of cards, and every category has its own plan for how tall its rows are: the track thickens, the blocks and chips grow, the clean grid takes its card, and the note under a pair takes its height from the rows around it. |
 | [v2.2.3](v2.2.3.md) | Desktop polish | The rail stacks everything it has, including a Sources card that stays only until both imports are live; Main task joins Attention; notes open as a row of their own; mood and energy become one row of chips; the score bar groups by category; and a perfect day gets one quiet moment. |
 | [v2.2.2](v2.2.2.md) | The instrument opens | The detail sheet rebuilt around its value: the big number is the input, one sentence of status, and a recessed stage holding the control made for the field — gauge, goal-centred weight scale, five-bar ladder, doors, seven-day mixer, thirty-day grid, night strip. |
 | [v2.2.1](v2.2.1.md) | Open it up | In bed takes one entry — the wake is derived from your sleep — on a 21:00–02:00 axis with your usual window. Every card opens into a detail editor, and the weekly cards let you fix any of the seven days the score counts. |
@@ -85,5 +86,7 @@ to the surface where a stray tap actually happens.
 | [v2.2.md](v2.2.md) | Log it on the board: what shipped early, and where. |
 | [v2.2.1.md](v2.2.1.md) | Open it up: the one-entry bed time and the editor behind every card. |
 | [v2.2.2.md](v2.2.2.md) | The instrument opens: the rebuilt editor — hero value, status line, a control per field. |
+| [v2.2.3.md](v2.2.3.md) | Desktop polish: the rail that stacks, notes on their own row, the grouped score bar. |
+| [v2.2.4.md](v2.2.4.md) | Desktop fill: the column that fills the height it has, and the row plan behind it. |
 | [../notes/brief.md](../notes/brief.md) | The original brief, kept for reference. |
 | [../notes/design-pass-v2.1.2.md](../notes/design-pass-v2.1.2.md) | The design brief v2.1.2 answered. |

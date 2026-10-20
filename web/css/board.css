@@ -357,6 +357,7 @@ body[data-board="true"] .footnote {
   grid-area: main;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
   gap: clamp(12px, 1.4vw, 26px);
   min-width: 0;
   min-height: 0;
@@ -416,13 +417,23 @@ body[data-board="true"] .footnote {
 }
 
 /* Two card slots per column, every row full — no field is ever half a row.
-   Rows are as tall as their contents: nothing is stretched to fill a column. */
+   The column is a stack of rows, and a row is a pair of cards: Steps sits
+   beside Gym, Read beside Learned, and the note a pair asks for opens
+   under the pair, not under the whole column. */
 .cat-cards {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   grid-auto-rows: auto;
+  gap: clamp(6px, 0.85vh, 9px);
+  min-height: 0;
+}
+
+.card-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: clamp(6px, 0.85vh, 9px);
+  min-width: 0;
 }
 
 /* ---------------------------------------------------------------- a card */
@@ -444,7 +455,7 @@ body[data-board="true"] .footnote {
 }
 
 .card[data-w="2"] {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .card[data-state="empty"] {
@@ -1392,11 +1403,11 @@ body[data-board="true"] .footnote {
 
 /* Very narrow: one card per row, and nothing pretends to fit two. */
 @media (max-width: 460px) {
-  .cat-cards {
+  .card-row {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .card[data-w="2"] {
+  .card-row > .card[data-w="2"] {
     grid-column: span 1;
   }
 }
@@ -1438,5 +1449,211 @@ body[data-board="true"] .footnote {
 @container card (max-width: 250px) {
   .bed-labels {
     display: none;
+  }
+}
+
+/* ------------------------------------------------------------- the fill
+   v2.2.4 — the column fills the height it has.
+
+   The board is three category columns, each a stack of rows, each row a
+   pair of cards. Every category has its own row weights, so a column fills
+   without borrowing a height from another column and without any card being
+   stretched to match a card somewhere else. The height a card has left goes
+   into the field it draws: the track thickens, the blocks and chips grow,
+   the clean grid takes its card. Below 1240×820 the board goes back to
+   sizing every card to its own content, and the page scrolls. */
+
+@media (min-width: 1240px) and (min-height: 820px) {
+  /* The page is exactly one screen: the board fills it and the bar sits at
+     the bottom. */
+  body[data-board="true"] .page {
+    height: calc(100dvh - var(--chrome-h));
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  /* The bar sits at the bottom of the screen and the columns run to it. The
+     growth is capped — the board is 809 px tall at 1440×900, and it is not
+     allowed past 972 — so a very tall window leaves the extra room below
+     the board instead of turning every card into a billboard. */
+  body[data-board="true"] .board {
+    grid-template-rows: minmax(0, 1fr) auto;
+    max-height: 972px;
+  }
+
+  body[data-board="true"] .cat {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  /* Body's six rows, Mind's four, Attention's four: three plans, never
+     shared. A row keeps its own min-content height, so the leftover is
+     spread by weight and never by stretching.
+
+     The rows are flex items, not grid tracks, on purpose: a grid track that
+     cannot shrink below its content pushes its neighbours instead of
+     squeezing them. A note opening under a pair takes its height from the
+     other rows in the same column, exactly as it should. */
+  body[data-board="true"] .cat-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* A pair shares one row height, so the two cards in it are the same
+     height — but the note that belongs to the pair grows that row and takes
+     its height from the other rows in the same column, never from the
+     score bar below. */
+  body[data-board="true"] .card-row {
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: calc(var(--w) / var(--sum) * 100%);
+    align-items: stretch;
+    min-height: min-content;
+  }
+
+  /* The row plan, one per category. The order is the board's own: Body runs
+     Slept, Steps/Gym, Alcohol/Outdoor, Greens/Creatine, Weight, In bed; Mind
+     runs Deep blocks, Read/Learned, Mood, Energy; Attention runs Screen time,
+     Pickups, Main task, Clean day. */
+  body[data-board="true"] .cat[data-category="body"] .cat-cards {
+    --sum: 6.5;
+  }
+
+  body[data-board="true"] .cat[data-category="body"] .card-row:nth-child(1) {
+    --w: 1.2;
+  }
+
+  body[data-board="true"] .cat[data-category="body"] .card-row:nth-child(2) {
+    --w: 1;
+  }
+
+  body[data-board="true"] .cat[data-category="body"] .card-row:nth-child(3) {
+    --w: 1;
+  }
+
+  body[data-board="true"] .cat[data-category="body"] .card-row:nth-child(4) {
+    --w: 1.1;
+  }
+
+  body[data-board="true"] .cat[data-category="body"] .card-row:nth-child(5) {
+    --w: 1;
+  }
+
+  body[data-board="true"] .cat[data-category="body"] .card-row:nth-child(6) {
+    --w: 1.2;
+  }
+
+  body[data-board="true"] .cat[data-category="mind"] .cat-cards {
+    --sum: 5.1;
+  }
+
+  body[data-board="true"] .cat[data-category="mind"] .card-row:nth-child(1) {
+    --w: 1.35;
+  }
+
+  body[data-board="true"] .cat[data-category="mind"] .card-row:nth-child(2) {
+    --w: 0.95;
+  }
+
+  body[data-board="true"] .cat[data-category="mind"] .card-row:nth-child(3) {
+    --w: 1.4;
+  }
+
+  body[data-board="true"] .cat[data-category="mind"] .card-row:nth-child(4) {
+    --w: 1.4;
+  }
+
+  body[data-board="true"] .cat[data-category="attention"] .cat-cards {
+    --sum: 4.95;
+  }
+
+  body[data-board="true"] .cat[data-category="attention"] .card-row:nth-child(1) {
+    --w: 1.25;
+  }
+
+  body[data-board="true"] .cat[data-category="attention"] .card-row:nth-child(2) {
+    --w: 1.25;
+  }
+
+  body[data-board="true"] .cat[data-category="attention"] .card-row:nth-child(3) {
+    --w: 1.1;
+  }
+
+  body[data-board="true"] .cat[data-category="attention"] .card-row:nth-child(4) {
+    --w: 1.35;
+  }
+
+  /* Inside a card: the head stays at the top, the field takes what is left,
+     the line of words stays at the bottom. */
+  body[data-board="true"] .card {
+    grid-template-rows: auto minmax(min-content, 1fr) auto;
+    gap: 5px;
+    padding: 8px clamp(10px, 0.8vw, 14px);
+  }
+
+  body[data-board="true"] .ins {
+    height: 100%;
+    align-items: stretch;
+  }
+
+  /* A track: the band the value should land in thickens with the card, and
+     the knob stays a target you can hit. */
+  body[data-board="true"] .ins--scale {
+    align-items: stretch;
+    padding: 4px 1px;
+  }
+
+  body[data-board="true"] .ins-track {
+    height: auto;
+    min-height: 14px;
+  }
+
+  body[data-board="true"] .ins-mark {
+    height: clamp(15px, 92%, 54px);
+  }
+
+  /* The small counts: a row of ticks that fills its card. */
+  body[data-board="true"] .ins-dashes {
+    height: auto;
+    min-height: 18px;
+  }
+
+  /* The big count: three blocks, as tall as the card allows. */
+  body[data-board="true"] .ins--blocks {
+    height: auto;
+    min-height: 36px;
+  }
+
+  /* A yes/no keeps its 44 px buttons and sits at the top of the card: the
+     extra height stays in the stage, never in the buttons. */
+  body[data-board="true"] .ins--switch {
+    align-self: start;
+    height: 44px;
+  }
+
+  /* A felt 1–5: the prompt above, five chips that grow — but stay chips. */
+  body[data-board="true"] .ins--steps {
+    grid-template-rows: auto auto;
+    align-content: center;
+  }
+
+  body[data-board="true"] .ins-steps {
+    height: 60px;
+    align-self: center;
+  }
+
+  /* The evening: the night strip takes the height, the hours stay small. */
+  body[data-board="true"] .ins--bed {
+    grid-template-rows: 1fr auto;
+  }
+
+  body[data-board="true"] .bed-track {
+    height: auto;
+    min-height: 16px;
+    align-self: stretch;
+  }
+
+  /* Thirty days: bigger cells, and the grid fills the card it is in. */
+  body[data-board="true"] .ins-clean {
+    grid-auto-rows: minmax(20px, 1fr);
   }
 }
