@@ -9,6 +9,7 @@ import { h, mount } from "../core/dom.js";
 import { createRings, microRings } from "../rings.js";
 import { createCard } from "../components/card.js";
 import { openDaySheet } from "../components/daySheet.js";
+import { openCardEditor } from "../components/editor.js";
 import { categoryMap } from "../core/catalogue.js";
 import { dayOfMonth, longDay, points, weekdayInitial } from "../core/format.js";
 import { api, demoApi } from "../core/api.js";
@@ -67,6 +68,7 @@ export function boardView({
         accent: accents.get(categoryId),
         locked: demo,
         onSave: (values) => save(tile.id, values),
+        onOpen: () => openEditor(tile.id, categoryId),
       });
       cards.set(tile.id, card);
       grid.append(card.el);
@@ -109,13 +111,43 @@ export function boardView({
   // -------------------------------------------------------------- internals
 
   async function save(fieldId, values) {
-    if (demo) return;
+    if (demo) return null;
     try {
       const next = await api.saveDay(payload.day, values);
       setPayload(next);
+      return next;
     } catch (error) {
       toast(`Not saved: ${error.message}`, "attention");
+      return null;
     }
+  }
+
+  /** Writes to any day, not just today: the detail editor can fix Tuesday. */
+  async function saveDay(day, values) {
+    if (demo) return null;
+    try {
+      await api.saveDay(day, values);
+      const next = await api.day(payload.day);
+      setPayload(next);
+      return next;
+    } catch (error) {
+      toast(`Not saved: ${error.message}`, "attention");
+      return null;
+    }
+  }
+
+  /** The card, opened up: a bigger control for the same field. */
+  function openEditor(id, categoryId) {
+    if (demo) return;
+    const seed = payload.board.tiles.find((tile) => tile.id === id);
+    if (!seed) return;
+    openCardEditor(seed, {
+      accent: accents.get(categoryId),
+      category: (categories.get(categoryId) || {}).label || categoryId,
+      tile: () => payload.board.tiles.find((tile) => tile.id === id),
+      save: (values) => save(id, values),
+      saveDay,
+    });
   }
 
   /** Navigation, never logging: bring a card into view and let it pulse. */

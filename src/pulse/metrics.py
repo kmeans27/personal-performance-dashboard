@@ -87,15 +87,7 @@ METRICS: tuple[Metric, ...] = (
         scorer="none",
         input="time",
         prompt="When did you get to bed?",
-        help="Only used to score how regular your rhythm is.",
-    ),
-    _m(
-        id="wake_time",
-        label="Wake time",
-        category="body",
-        scorer="none",
-        input="time",
-        prompt="When did you get up?",
+        help="You only enter the time you went to bed; your wake time comes from your sleep. The ring scores how regular the time is.",
     ),
     _m(
         id="steps",
@@ -367,8 +359,8 @@ TILES: tuple[Tile, ...] = (
         label="Weight", target="Against your goal", track=(60, 110),
     ),
     Tile(
-        "rhythm", "body", "night", ("bed_time", "wake_time"), w=2,
-        label="In bed", target="Bed and wake time",
+        "rhythm", "body", "bedtime", ("bed_time",), w=2,
+        label="In bed", target="When you got to bed",
     ),
     # --------------------------------------------------------------- mind
     Tile(

@@ -372,7 +372,31 @@ body[data-board="true"] .footnote {
   display: flex;
   align-items: baseline;
   gap: clamp(6px, 0.6vw, 12px);
+  width: 100%;
   min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+
+.card-head:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+
+.card[data-editable="true"] {
+  cursor: pointer;
+}
+
+.card[data-editable="true"]:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2));
+  background: var(--surface-2);
 }
 
 .card-label {
@@ -781,45 +805,91 @@ body[data-board="true"] .footnote {
   background: var(--ink-3);
 }
 
-/* ---- a night: a window across the day, both ends draggable -------------- */
+/* ---- the evening: 21:00 to 02:00, a single hour to place ---------------- */
 
-.ins--night {
+.ins--bed {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: clamp(2px, 0.4vh, 5px);
+  min-height: 0;
   touch-action: none;
+  cursor: ew-resize;
 }
 
-.night-track {
+.ins--bed:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--r-xs);
+}
+
+.bed-track {
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 12px;
+  min-height: 8px;
+  max-height: 26px;
+  align-self: end;
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.05);
 }
 
-.night-window {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: var(--r-full);
-  background: color-mix(in srgb, var(--accent) 62%, transparent);
-  transition: left var(--dur-ring) var(--ease-spring), width var(--dur-ring) var(--ease-spring);
-}
-
-.ins--night[data-known="false"] .night-window {
-  opacity: 0.35;
-}
-
-.night-handle {
+.bed-zone {
   position: absolute;
   top: 50%;
-  width: min(20px, 100%);
-  height: min(20px, 100%);
+  transform: translateY(-50%);
+  height: calc(100% + 6px);
+  border-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--accent) 45%, transparent),
+    inset -1px 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.bed-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ink-4);
+}
+
+.bed-tick--yesterday {
+  top: -4px;
+  bottom: -4px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.bed-mark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: auto;
+  height: max(14px, min(30px, 125%));
+  aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 0 2px var(--surface-2);
-  cursor: ew-resize;
-  touch-action: none;
+  box-shadow: 0 0 0 3px var(--surface-2), 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: left var(--dur-ring) var(--ease-spring);
+}
+
+.ins--bed[data-known="false"] .bed-mark {
+  display: none;
+}
+
+.ins--bed[data-drag] .bed-mark {
+  transition: none;
+}
+
+.bed-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 /* ---- thirty days of one habit, today at the end ------------------------- */
@@ -1093,13 +1163,8 @@ body[data-board="true"] .footnote {
     min-height: 34px;
   }
 
-  .night-track {
-    max-height: 16px;
-  }
-
-  .night-handle {
-    width: min(24px, 100%);
-    height: min(24px, 100%);
+  .bed-track {
+    max-height: 26px;
   }
 }
 
@@ -1137,6 +1202,12 @@ body[data-board="true"] .footnote {
   }
 
   .step span {
+    display: none;
+  }
+}
+
+@container card (max-width: 250px) {
+  .bed-labels {
     display: none;
   }
 }

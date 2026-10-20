@@ -13,7 +13,9 @@ Newest first. Every release is specified in its own file; the full ledger is in
 
 | Version | Status | What it did |
 | ------- | ------ | ----------- |
-| [v2.2](v2.2.md) | 🚧 Planned | The rest of answering on the board: undo, and pointer polish. Most of it shipped early, in v2.1.2. |
+| [v2.3](v2.3.md) | 🚧 Planned | Undo, and the pointer and focus pass. |
+| [v2.2.1](v2.2.1.md) | ✅ Shipped | Open it up. In bed takes one entry — the wake is derived from your sleep — on a 21:00–02:00 axis with your usual window. Every card opens into a detail editor shaped to its field, and the weekly cards let you fix any day the score counts. |
+| [v2.2](v2.2.md) | ✅ Shipped (early) | Log it on the board: every field answered where it is read. Landed inside v2.1.2. |
 | [v2.1.2](v2.1.2.md) | ✅ Shipped | The home screen rework. One screen of instruments: a rail with the score, yesterday, usual, the next best move and the week; three category columns; a score bar at the bottom. The cards are the only inputs — no sheet. |
 | [v2.1.1](v2.1.1.md) | ✅ Shipped | The density pass. Nothing stretches to fill the screen: a field is as big as what it holds, in three packed columns, and the left third now carries the category bars, a Mon–Sun week strip and three numbers. |
 | [v2.1](v2.1.md) | ✅ Shipped | The UI pass. Every field answers again, one field retired, and every chart redrawn in the shape its own data has. Three-band layout, three rings. |
@@ -42,8 +44,10 @@ Newest first. Every release is specified in its own file; the full ledger is in
 ## Why it exists
 
 - **The cards are the only inputs.** Every field is answered where it is read:
-  drag the knob, tap the third block, flip the switch. No sheet, no second list of
-  fields, no modal. The guided `/log` flow stays for the phone, one field a screen.
+  drag the knob, tap the third block, flip the switch. Click the card itself and it
+  opens into a detail editor — the same field, bigger, with an exact number and the
+  whole week where the week is what counts. No second list of fields behind a
+  button; the guided `/log` flow stays for the phone, one field a screen.
 - **One glance beats a list.** The board puts every field for today on one screen —
   no scrolling — grouped the way the rings are, and sized to what each field *is*:
   a yes/no is half a row, a gauge earns a full one. Rings cap at 100% each, so a
@@ -150,9 +154,11 @@ web/
   css/tokens.css   colours, spacing, type scale — the design system
   css/board.css    the board: the rail, three category columns, the card and its
                    instruments, states, the score bar, four breakpoints
+  css/editor.css   the detail editor's controls
   js/core/         api client, dom helpers, formatting, motion, haptics
   js/rings.js      the ring renderer used by every page
-  js/components/   card.js (one card, all instruments, inline logging), sheet, toast
+  js/components/   card.js (one card, all instruments, inline logging),
+                   editor.js (the detail sheet, one editor per field shape), sheet, toast
   js/views/        one small module per page
 ```
 
@@ -167,8 +173,9 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-v2.1.2 — the whole loop works end to end, the whole day fits one screen at
-1440×900 without scrolling, every field is answered in place on the board, and
-every card says in plain words how today sits against where it should land.
-Next: [v2.2](v2.2.md), the rest of the board interaction — undo, and pointer
-polish.
+v2.2.1 — the whole loop works end to end, the whole day fits one screen at
+1440×900 without scrolling, every field is answered in place on the board, every
+card says in plain words how today sits against where it should land, and every
+card opens into a detail editor when the answer needs to be exact. The bed time is
+one entry; the wake time is arithmetic.
+Next: [v2.3](v2.3.md), undo and the pointer pass.

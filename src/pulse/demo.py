@@ -167,7 +167,6 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
         values: dict[str, Any] = {
             "sleep_hours": sleep,
             "bed_time": _clock(bed_hour * 60),
-            "wake_time": _clock(wake_hour * 60),
             "steps": steps,
             "gym": gym,
             "greens": greens,
@@ -195,7 +194,6 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
         {
             "sleep_hours": 7.75,
             "bed_time": "22:45",
-            "wake_time": "06:30",
             "steps": 11200,
             "gym": 1,
             "greens": True,

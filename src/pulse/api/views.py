@@ -213,13 +213,14 @@ def _gap_line(
 
     if tile.id == "rhythm":
         bed = _minutes(values.get("bed_time"))
-        wake = _minutes(values.get("wake_time"))
-        if bed is not None and wake is not None:
-            minutes = wake - bed
-            if minutes <= 0:
-                minutes += 1440
-            return f"{minutes // 60}h {minutes % 60:02d}m in bed"
-        return tile.target
+        if bed is None:
+            return tile.target
+        slept = values.get("sleep_hours")
+        if not isinstance(slept, (int, float)) or isinstance(slept, bool):
+            return "Add slept hours for wake time"
+        minutes = max(1, int(round(float(slept) * 60)))
+        wake = (bed + minutes) % 1440
+        return f"Up {_clock(wake)} · {minutes // 60}h {minutes % 60:02d}m asleep"
 
     if tile.id == "weight":
         if goal is None:
@@ -266,6 +267,80 @@ def _usual(
     return round(sum(seen) / len(seen), 2) if seen else None
 
 
+def _clock(minutes: float) -> str:
+    """Minutes after midnight as a wall-clock time."""
+    hour, minute = divmod(int(round(minutes)) % 1440, 60)
+    return f"{hour:02d}:{minute:02d}"
+
+
+def _shift(minutes: float, anchor: int = 1080) -> float:
+    """Clock minutes as a distance from 18:00, so a bed time after midnight
+    does not read as the following evening."""
+    return (float(minutes) - anchor) % 1440
+
+
+def _circular_mean(values: Sequence[float], anchor: int = 1080) -> int | None:
+    """The average time of day, going the short way round midnight."""
+    if not values:
+        return None
+    angles = [2 * math.pi * _shift(value, anchor) / 1440 for value in values]
+    mean = math.atan2(
+        sum(math.sin(a) for a in angles) / len(angles),
+        sum(math.cos(a) for a in angles) / len(angles),
+    )
+    return int(round((anchor + (mean / (2 * math.pi)) * 1440) % 1440)) % 1440
+
+
+def _usual_bed(
+    values_by_day: dict[str, dict[str, Any]], day: str, span: int = 30
+) -> int | None:
+    """The bed time you usually keep — the centre of the card's window."""
+    anchor = date.fromisoformat(day)
+    seen = [
+        minutes
+        for offset in range(1, span + 1)
+        if (minutes := _minutes((values_by_day.get((anchor - timedelta(days=offset)).isoformat()) or {}).get("bed_time"))) is not None
+    ]
+    return _circular_mean(seen)
+
+
+def _derived_wake(values: dict[str, Any]) -> int | None:
+    """You enter when you went to bed; the hour you got up follows from how long
+    you slept. It is never stored — change either input and it moves."""
+    bed = _minutes(values.get("bed_time"))
+    slept = values.get("sleep_hours")
+    if bed is None or not isinstance(slept, (int, float)) or isinstance(slept, bool):
+        return None
+    return (bed + max(1, int(round(float(slept) * 60)))) % 1440
+
+
+def _yesterday_bed(values_by_day: dict[str, dict[str, Any]], day: str) -> int | None:
+    key = (date.fromisoformat(day) - timedelta(days=1)).isoformat()
+    return _minutes((values_by_day.get(key) or {}).get("bed_time"))
+
+
+def _week_days(
+    values_by_day: dict[str, dict[str, Any]], day: str, field: str
+) -> list[dict[str, Any]]:
+    """The trailing week the score actually counts, oldest first, today last —
+    so the detail editor and the card are looking at the same seven days."""
+    anchor = date.fromisoformat(day)
+    days = []
+    for offset in range(6, -1, -1):
+        moment = anchor - timedelta(days=offset)
+        raw = (values_by_day.get(moment.isoformat()) or {}).get(field)
+        value = raw if isinstance(raw, (int, float)) and not isinstance(raw, bool) else None
+        days.append(
+            {
+                "day": moment.isoformat(),
+                "value": value,
+                "today": moment == anchor,
+                "future": False,
+            }
+        )
+    return days
+
+
 def _avoid_days(values_by_day: dict[str, dict[str, Any]], day: str, span: int = 30) -> list[dict[str, Any]]:
     """The thirty dashes behind the clean-day card, oldest first."""
     anchor = date.fromisoformat(day)
@@ -301,9 +376,8 @@ def _tile_payload(
     track = list(tile.track) if tile.track else None
     zone = list(tile.zone) if tile.zone else None
 
-    if tile.chart == "night":
-        if answered:
-            display = " → ".join(values.get(f.id) or "—" for f in fields)
+    if tile.chart == "bedtime":
+        display = str(values.get("bed_time")) if values.get("bed_time") else None
     elif primary:
         display, _ = _display(primary, values.get(primary.id))
         progress = _progress(primary, values.get(primary.id), metric_scores.get(primary.id), tile.cap)
@@ -420,6 +494,21 @@ def _tile_payload(
         "yesterday": _yesterday(values_by_day or {}, day, primary.id) if (primary and day) else None,
         "usual": _usual(values_by_day or {}, day, primary.id) if (primary and day) else None,
         "days": _avoid_days(values_by_day or {}, day) if tile.id == "avoid_habit" and day else None,
+        # the bed-time card is a clock, not a number: hand it the times already
+        # in minutes so the card only has to place them on its own axis
+        "bed": _minutes(values.get("bed_time")),
+        "wake": _derived_wake(values),
+        "usual_bed": _usual_bed(values_by_day or {}, day) if day else None,
+        "yesterday_bed": _yesterday_bed(values_by_day or {}, day) if day else None,
+        # what the detail editor needs to draw the right control
+        "input": primary.input if primary else None,
+        "prompt": primary.prompt if primary else "",
+        "help": primary.help if primary else "",
+        "presets": list(primary.presets) if primary else [],
+        "max": primary.max if primary else None,
+        "week_days": _week_days(values_by_day or {}, day, primary.id)
+        if (primary and tile.chart == "segments" and day)
+        else None,
     }
 
 

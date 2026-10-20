@@ -12,7 +12,6 @@ FULL_DAY = {
     "weight_kg": 87,
     "creatine": True,
     "bed_time": "22:45",
-    "wake_time": "06:30",
     "deep_blocks": 3,
     "learned": True,
     "learned_what": "A one-line note",
@@ -24,7 +23,7 @@ FULL_DAY = {
     "avoid_habit": True,
 }
 
-CHARTS = {"range", "bar", "segments", "blocks", "switch", "scale", "night", "trend"}
+CHARTS = {"range", "bar", "segments", "blocks", "switch", "scale", "bedtime"}
 
 
 def tiles(client, day=None):
@@ -112,7 +111,8 @@ def test_a_fully_logged_day_completes_the_board(client):
     assert sleep["progress"] == 1.0
 
     rhythm = next(tile for tile in board["tiles"] if tile["id"] == "rhythm")
-    assert rhythm["display"] == "22:45 → 06:30"
+    assert rhythm["display"] == "22:45"
+    assert rhythm["wake"] == 6 * 60 + 30
 
     learned = next(tile for tile in board["tiles"] if tile["id"] == "learned")
     assert learned["sub"] == "A one-line note"
@@ -180,11 +180,11 @@ def test_range_tiles_carry_their_axis_and_zone(client):
 
 def test_tiles_carry_the_raw_values_they_draw_from(client):
     day = date.today().isoformat()
-    client.put(f"/api/day/{day}", json={"values": {"bed_time": "22:45", "wake_time": "06:30"}})
+    client.put(f"/api/day/{day}", json={"values": {"bed_time": "22:45"}})
     board = tiles(client)
 
     rhythm = next(tile for tile in board["tiles"] if tile["id"] == "rhythm")
-    assert rhythm["values"] == {"bed_time": "22:45", "wake_time": "06:30"}
+    assert rhythm["values"] == {"bed_time": "22:45"}
 
 
 def test_every_card_prices_itself_against_the_ring(client):
@@ -342,3 +342,90 @@ def test_demo_board_is_complete(client):
     assert board["complete"] is True
     assert board["daily_logged"] == board["daily_total"]
     assert all(tile["display"] is not None for tile in board["tiles"])
+
+
+def test_the_bed_card_takes_one_entry_and_derives_the_wake_time(client):
+    """You enter when you went to bed. The hour you got up is bed + slept: not a
+    second thing to remember, and never stored."""
+    day = date.today().isoformat()
+    client.put(f"/api/day/{day}", json={"values": {"bed_time": "22:45", "sleep_hours": 7.5}})
+
+    rhythm = next(tile for tile in tiles(client)["tiles"] if tile["id"] == "rhythm")
+    assert rhythm["fields"] == ["bed_time"]
+    assert rhythm["display"] == "22:45"
+    assert rhythm["bed"] == 22 * 60 + 45
+    assert rhythm["wake"] == 6 * 60 + 15
+    assert rhythm["gap"] == "Up 06:15 · 7h 30m asleep"
+
+    # Change the sleep, and the wake time moves with it.
+    client.put(f"/api/day/{day}", json={"values": {"sleep_hours": 8}})
+    rhythm = next(tile for tile in tiles(client)["tiles"] if tile["id"] == "rhythm")
+    assert rhythm["wake"] == 6 * 60 + 45
+
+    schema = client.get("/api/schema").json()
+    assert "wake_time" not in {metric["id"] for metric in schema["metrics"]}
+
+
+def test_the_bed_card_asks_for_sleep_before_it_promises_a_wake_time(client):
+    day = date.today().isoformat()
+    client.put(f"/api/day/{day}", json={"values": {"bed_time": "23:10"}})
+
+    rhythm = next(tile for tile in tiles(client)["tiles"] if tile["id"] == "rhythm")
+    assert rhythm["wake"] is None
+    assert rhythm["gap"] == "Add slept hours for wake time"
+    assert rhythm["settled"] is True
+
+
+def test_the_bed_card_finds_your_usual_hour_around_midnight(client):
+    """A mean of 23:30, 23:45, 00:15 and 23:00 is 23:37 — the short way round
+    midnight, not 17:37."""
+    anchor = date.today()
+    for offset, bed in ((1, "23:30"), (2, "23:45"), (3, "00:15"), (4, "23:00")):
+        day = (anchor - timedelta(days=offset)).isoformat()
+        client.put(f"/api/day/{day}", json={"values": {"bed_time": bed}})
+
+    rhythm = next(tile for tile in tiles(client)["tiles"] if tile["id"] == "rhythm")
+    assert rhythm["usual_bed"] is not None
+    assert 23 * 60 + 25 <= rhythm["usual_bed"] <= 23 * 60 + 50
+    assert rhythm["yesterday_bed"] == 23 * 60 + 30
+
+
+def test_every_card_hands_the_detail_editor_what_it_needs(client):
+    """A card opens into a bigger control, so the payload carries the prompt,
+    the help line, the step and the presets the editor draws."""
+    board = tiles(client)
+    sleep = next(tile for tile in board["tiles"] if tile["id"] == "sleep")
+    assert sleep["input"] == "number"
+    assert sleep["prompt"] == "How long did you sleep?"
+    assert sleep["help"]
+    assert sleep["presets"] == [6, 7, 7.5, 8, 9]
+    assert sleep["min"] == 0
+    assert sleep["max"] == 12
+    assert sleep["step"] == 0.25
+
+
+def test_the_weekly_editor_sees_the_same_seven_days_the_score_counts(client):
+    """Gym and alcohol are scored over the trailing week, so their detail
+    editor is handed that exact week — oldest first, today last."""
+    anchor = date.today()
+    for offset, drinks in ((0, 0), (1, 2), (3, 1)):
+        day = (anchor - timedelta(days=offset)).isoformat()
+        client.put(f"/api/day/{day}", json={"values": {"alcohol": drinks}})
+
+    alcohol = next(tile for tile in tiles(client)["tiles"] if tile["id"] == "alcohol")
+    week = alcohol["week_days"]
+    assert len(week) == 7
+    assert week[-1]["day"] == anchor.isoformat()
+    assert week[-1]["today"] is True
+    assert week[0]["day"] == (anchor - timedelta(days=6)).isoformat()
+    assert [entry["future"] for entry in week] == [False] * 7
+    values = {entry["day"]: entry["value"] for entry in week}
+    assert values[(anchor - timedelta(days=1)).isoformat()] == 2
+    assert values[(anchor - timedelta(days=3)).isoformat()] == 1
+    assert values[anchor.isoformat()] == 0
+
+
+def test_only_the_weekly_cards_carry_their_days(client):
+    board = tiles(client)["tiles"]
+    weekly = {tile["id"] for tile in board if tile["week_days"] is not None}
+    assert weekly == {"gym", "alcohol"}

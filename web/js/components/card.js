@@ -6,7 +6,6 @@
    card only knows how to draw the shape it was handed. */
 
 import { h, mount, s } from "../core/dom.js";
-import { clock, compactNumber } from "../core/format.js";
 
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
@@ -345,66 +344,116 @@ function scaleStepsInstrument(tile, { save, locked }) {
   return { el, set };
 }
 
-/** A window across the day: when you slept. Both ends drag. */
-function nightInstrument(tile, { save, locked }) {
-  const DEFAULTS = { bed_time: "23:00", wake_time: "07:00" };
-  const windows = [h("span", { class: "night-window" }), h("span", { class: "night-window" })];
-  const handles = {
-    bed_time: h("button", { type: "button", class: "night-handle night-handle--bed", "aria-label": "Bed time" }),
-    wake_time: h("button", { type: "button", class: "night-handle night-handle--wake", "aria-label": "Wake time" }),
+/** The evening: 21:00 to 02:00, the hours most people actually get to bed.
+    You enter one thing — when you lay down. The hour you got up is worked out
+    from how long you slept, so there is never a second clock to keep. */
+function bedInstrument(tile, { save, locked }) {
+  const START = 21 * 60; // 21:00
+  const SPAN = 5 * 60; // 02:00
+  const zone = h("span", { class: "bed-zone" });
+  const usualTick = h("span", { class: "bed-tick bed-tick--usual", title: "Your usual" });
+  const yesterdayTick = h("span", { class: "bed-tick bed-tick--yesterday", title: "Yesterday" });
+  const mark = h("span", { class: "bed-mark" });
+  const track = h("div", { class: "bed-track" }, zone, usualTick, yesterdayTick, mark);
+  const labels = h(
+    "div",
+    { class: "bed-labels", "aria-hidden": "true" },
+    ...["21:00", "22:00", "23:00", "00:00", "01:00", "02:00"].map((text) => h("span", {}, text))
+  );
+  const el = h("div", { class: "ins ins--bed" }, track, labels);
+
+  let value = null;
+  let usual = null;
+  let yesterday = null;
+  let timer = null;
+
+  /** Minutes past 21:00, as a share of the five-hour window. Anything outside
+      it sits on the nearer edge — the card never lies about the axis. */
+  const share = (minutes) => {
+    if (minutes == null) return null;
+    const raw = (((minutes - START) % 1440) + 1440) % 1440;
+    if (raw <= SPAN) return raw / SPAN;
+    const toStart = Math.min(raw, 1440 - raw);
+    const toEnd = Math.min(Math.abs(raw - SPAN), 1440 - Math.abs(raw - SPAN));
+    return toStart <= toEnd ? 0 : 1;
   };
-  const track = h("div", { class: "night-track" }, ...windows, handles.bed_time, handles.wake_time);
-  const el = h("div", { class: "ins ins--night" }, track);
 
-  let values = { ...DEFAULTS };
-
-  const paint = (known) => {
-    const bed = minutesOf(values.bed_time);
-    const wake = minutesOf(values.wake_time);
-    el.dataset.known = known ? "true" : "false";
-    for (const handle of Object.values(handles)) handle.style.display = locked ? "none" : "block";
-    handles.bed_time.style.left = `${((bed ?? 0) / 1440) * 100}%`;
-    handles.wake_time.style.left = `${((wake ?? 0) / 1440) * 100}%`;
-    const [evening, morning] = windows;
-    if (bed <= wake) {
-      evening.style.left = `${(bed / 1440) * 100}%`;
-      evening.style.width = `${Math.max(0.8, ((wake - bed) / 1440) * 100)}%`;
-      morning.style.display = "none";
-    } else {
-      evening.style.left = `${(bed / 1440) * 100}%`;
-      evening.style.width = `${Math.max(0.8, 100 - (bed / 1440) * 100)}%`;
-      morning.style.left = "0%";
-      morning.style.width = `${Math.max(0.8, (wake / 1440) * 100)}%`;
-      morning.style.display = "block";
+  const place = (node, minutes) => {
+    const at = share(minutes);
+    if (at == null) {
+      node.hidden = true;
+      return;
     }
+    node.hidden = false;
+    node.style.left = `${at * 100}%`;
   };
 
-  for (const [field, handle] of Object.entries(handles)) {
-    if (locked) continue;
+  function paint() {
+    el.dataset.known = value == null ? "false" : "true";
+    place(mark, value);
+    place(usualTick, usual);
+    place(yesterdayTick, yesterday);
+    if (usual == null) {
+      zone.hidden = true;
+    } else {
+      const lo = share(usual - 45);
+      const hi = share(usual + 45);
+      zone.hidden = false;
+      zone.style.left = `${Math.min(lo, hi) * 100}%`;
+      zone.style.width = `${Math.abs(hi - lo) * 100}%`;
+    }
+    if (value == null) {
+      el.removeAttribute("aria-valuenow");
+      el.removeAttribute("aria-valuetext");
+    } else {
+      el.setAttribute("aria-valuenow", String(value));
+      el.setAttribute("aria-valuetext", clockOf(value));
+    }
+  }
+
+  const settle = () => {
+    clearTimeout(timer);
+    if (value != null) save({ bed_time: clockOf(value) });
+  };
+
+  if (!locked) {
+    el.tabIndex = 0;
+    el.setAttribute("role", "slider");
+    el.setAttribute("aria-label", "Bed time");
+    el.setAttribute("aria-valuemin", "0");
+    el.setAttribute("aria-valuemax", "1439");
+
     dragTarget(
-      handle,
+      track,
       (event) => {
-        const next = Math.round(valueFromEvent(track, event, 0, 1440) / 15) * 15;
-        const other = minutesOf(values[field === "bed_time" ? "wake_time" : "bed_time"]);
-        let value = ((next % 1440) + 1440) % 1440;
-        // A quarter-hour is the smallest honest move, and never the same minute.
-        if (other != null && Math.abs(value - other) < 15) {
-          value = ((other + (field === "bed_time" ? 1425 : 15)) % 1440 + 1440) % 1440;
-        }
-        values[field] = clockOf(value);
-        paint(true);
+        const raw = valueFromEvent(track, event, START, START + SPAN);
+        value = ((Math.round(raw / 15) * 15) % 1440 + 1440) % 1440;
+        paint();
       },
-      () => save({ bed_time: values.bed_time, wake_time: values.wake_time })
+      settle
     );
+
+    el.addEventListener("keydown", (event) => {
+      const step = event.shiftKey ? 60 : 15;
+      let next = value ?? 23 * 60;
+      if (event.key === "ArrowLeft" || event.key === "ArrowDown") next -= step;
+      else if (event.key === "ArrowRight" || event.key === "ArrowUp") next += step;
+      else if (event.key === "Home") next = START;
+      else if (event.key === "End") next = START + SPAN;
+      else return;
+      event.preventDefault();
+      value = ((Math.round(next / 15) * 15) % 1440 + 1440) % 1440;
+      paint();
+      clearTimeout(timer);
+      timer = setTimeout(settle, 450);
+    });
   }
 
   function set(next) {
-    const known = typeof next.values?.bed_time === "string" || typeof next.values?.wake_time === "string";
-    values = {
-      bed_time: next.values?.bed_time || DEFAULTS.bed_time,
-      wake_time: next.values?.wake_time || DEFAULTS.wake_time,
-    };
-    paint(known);
+    value = typeof next.bed === "number" ? next.bed : null;
+    usual = typeof next.usual_bed === "number" ? next.usual_bed : null;
+    yesterday = typeof next.yesterday_bed === "number" ? next.yesterday_bed : null;
+    paint();
   }
 
   set(tile);
@@ -465,8 +514,8 @@ function instrumentFor(tile, options) {
       return switchInstrument(tile, options);
     case "scale":
       return scaleStepsInstrument(tile, options);
-    case "night":
-      return nightInstrument(tile, options);
+    case "bedtime":
+      return bedInstrument(tile, options);
     case "range":
     default:
       return scaleInstrument(tile, options);
@@ -475,12 +524,26 @@ function instrumentFor(tile, options) {
 
 /* -------------------------------------------------------------------- card */
 
-export function createCard(tile, { accent, locked = false, onSave } = {}) {
+export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}) {
   const label = h("span", { class: "card-label" }, tile.label);
   const value = h("span", { class: "card-value num" });
   const points = h("span", { class: "card-points num" });
   const note = h("p", { class: "card-gap" });
-  const head = h("div", { class: "card-head" }, label, value, points);
+  // The head is a real button so the detail editor is one Tab away. A click
+  // anywhere on the card that is not an instrument opens it too.
+  const head = h(
+    "button",
+    {
+      type: "button",
+      class: "card-head",
+      "aria-label": `Edit ${tile.label} in detail`,
+      "aria-haspopup": "dialog",
+      title: "Open in detail",
+    },
+    label,
+    value,
+    points
+  );
 
   const options = {
     locked,
@@ -560,6 +623,12 @@ export function createCard(tile, { accent, locked = false, onSave } = {}) {
       // Not part of the score: say so, rather than showing a zero it did not earn.
       points.dataset.chip = "true";
       points.textContent = next.id === "weight" ? "Optional" : "Not in the score";
+      points.removeAttribute("title");
+    } else if (next.points == null) {
+      // Scored, but too early to say: a rhythm needs a few nights first.
+      points.dataset.chip = "true";
+      points.textContent = "—";
+      points.title = "Scores after a few nights";
     } else {
       points.dataset.chip = "false";
       points.textContent = `${next.points ?? 0}`;
@@ -579,6 +648,15 @@ export function createCard(tile, { accent, locked = false, onSave } = {}) {
       el.dataset.landed = "true";
       setTimeout(() => delete el.dataset.landed, 640);
     }
+  }
+
+  if (!locked && onOpen) {
+    el.dataset.editable = "true";
+    el.addEventListener("click", (event) => {
+      // Instruments answer in place; the rest of the card opens it up.
+      if (event.target.closest(".ins, .card-note")) return;
+      onOpen();
+    });
   }
 
   update(tile);
