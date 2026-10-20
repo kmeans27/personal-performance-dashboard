@@ -53,7 +53,14 @@ def _range_request(start: str | None, end: str | None, days: int) -> tuple[str, 
 def today() -> dict:
     day = today_str()
     entries, scores = _load(day, day)
-    return build_day_payload(entries, scores, day, include_insight=True, settings=repository.get_settings())
+    return build_day_payload(
+        entries,
+        scores,
+        day,
+        include_insight=True,
+        settings=repository.get_settings(),
+        sources=repository.source_status(),
+    )
 
 
 @router.get("/range")

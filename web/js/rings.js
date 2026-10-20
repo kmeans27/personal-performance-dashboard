@@ -67,16 +67,40 @@ export function createRings({ caption = "", centre = true, className = "rings" }
     return group;
   });
 
+  /* A thin lit segment that travels around each ring once, for the moment a
+     day closes every ring. It is decoration, not data: hidden at rest. */
+  const sheens = GEOMETRY.map((geometry) =>
+    s(
+      "g",
+      {
+        class: "ring-sheen",
+        style: { color: ACCENTS[geometry.id], transformOrigin: `${CENTRE}px ${CENTRE}px` },
+      },
+      s("circle", {
+        cx: CENTRE,
+        cy: CENTRE,
+        r: geometry.radius,
+        fill: "none",
+        pathLength: 100,
+        "stroke-width": geometry.width * 0.55,
+        "stroke-linecap": "round",
+        "stroke-dasharray": "13 87",
+      })
+    )
+  );
+
   const svg = s(
     "svg",
     { viewBox: `0 0 ${VIEW} ${VIEW}`, "aria-hidden": "true", focusable: "false" },
-    circles
+    circles,
+    sheens
   );
 
   const scoreNode = h("div", { class: "ring-score num", "data-empty": "true" }, "—");
   const captionNode = h("div", { class: "ring-caption" }, caption);
   const centreNode = centre ? h("div", { class: "rings-center" }, scoreNode, captionNode) : null;
   const wrapper = h("div", { class: className }, svg, centreNode);
+  let perfectTimer = null;
 
   function setScores({ total, categories = {}, focus } = {}) {
     for (const [id, arcRef] of arcs) {
@@ -91,18 +115,52 @@ export function createRings({ caption = "", centre = true, className = "rings" }
     }
     const value = total == null ? null : Math.round(total * 100);
     scoreNode.dataset.empty = value == null ? "true" : "false";
-    mount(
-      scoreNode,
-      value == null ? "Not logged" : value,
-      value == null ? null : h("small", {}, "/100")
-    );
+    scoreNode.dataset.digits = value == null ? "0" : String(String(value).length);
+    mount(scoreNode, value == null ? "—" : String(value));
   }
 
   function setCaption(text) {
     captionNode.textContent = text;
   }
 
-  return { el: wrapper, svg, setScores, setCaption, settleNow: () => settle(wrapper) };
+  /** A closed day, once per day: the sweep, the swell, the pulse. After that
+      the rings simply sit a little brighter for the rest of the day. */
+  function celebrate(day, total) {
+    const value = total == null ? null : Math.round(total * 100);
+    if (value !== 100) {
+      delete wrapper.dataset.perfect;
+      clearTimeout(perfectTimer);
+      return;
+    }
+    const key = `pulse:perfect:${day}`;
+    let seen = false;
+    try {
+      seen = Boolean(window.localStorage.getItem(key));
+    } catch {
+      seen = false;
+    }
+    if (seen) {
+      wrapper.dataset.perfect = "done";
+      return;
+    }
+    try {
+      window.localStorage.setItem(key, new Date().toISOString());
+    } catch {
+      /* private mode: the moment still happens, it just will not remember */
+    }
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduced) {
+      wrapper.dataset.perfect = "done";
+      return;
+    }
+    wrapper.dataset.perfect = "true";
+    clearTimeout(perfectTimer);
+    perfectTimer = setTimeout(() => {
+      wrapper.dataset.perfect = "done";
+    }, 3000);
+  }
+
+  return { el: wrapper, svg, setScores, setCaption, celebrate, settleNow: () => settle(wrapper) };
 }
 
 /** Three arcs in a 40px square — a day, at calendar size. */

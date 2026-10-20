@@ -26,6 +26,7 @@ export function createApi(base = "/api") {
     settings: () => request(base, "/settings"),
     saveSettings: (patch) => request(base, "/settings", { method: "PATCH", body: patch }),
     stats: () => request(base, "/stats"),
+    sources: () => request(base, "/sources"),
     today: () => request(base, "/today"),
     day: (day, { insight = false } = {}) => request(base, `/day/${day}${insight ? "?insight=true" : ""}`),
     saveDay: (day, values, source = "manual") =>

@@ -265,6 +265,7 @@ function blocksInstrument(tile, { save, locked }) {
     const filled = next.filled || 0;
     blocks.forEach((block, index) => {
       block.dataset.filled = index < filled ? "true" : "false";
+      block.dataset.next = index === filled ? "true" : "false";
     });
   }
 
@@ -327,7 +328,12 @@ function scaleStepsInstrument(tile, { save, locked }) {
     steps.push(step);
     row.append(step);
   }
-  const el = h("div", { class: "ins ins--steps" }, row);
+  const el = h(
+    "div",
+    { class: "ins ins--steps" },
+    tile.prompt ? h("p", { class: "ins-prompt" }, tile.prompt) : null,
+    row
+  );
 
   function set(next) {
     const raw = Number(next.values?.[next.fields[0]]);
@@ -528,7 +534,9 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
   const label = h("span", { class: "card-label" }, tile.label);
   const value = h("span", { class: "card-value num" });
   const points = h("span", { class: "card-points num" });
-  const note = h("p", { class: "card-gap" });
+  const gap = h("p", { class: "card-gap" });
+  const headRow = h("span", { class: "card-head-row" }, label, points);
+  const valueRow = h("span", { class: "card-head-value" }, value);
   // The head is a real button so the detail editor is one Tab away. A click
   // anywhere on the card that is not an instrument opens it too.
   const head = h(
@@ -540,9 +548,8 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
       "aria-haspopup": "dialog",
       title: "Open in detail",
     },
-    label,
-    value,
-    points
+    headRow,
+    valueRow
   );
 
   const options = {
@@ -563,33 +570,8 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
     },
     head,
     instrument.el,
-    note
+    gap
   );
-
-  /* Learned is the one switch that carries a written note: choosing Yes asks
-     for the one thing, in the card itself. */
-  let noteField = null;
-  let noteTimer = null;
-  if (tile.id === "learned") {
-    noteField = h("input", {
-      class: "card-note",
-      type: "text",
-      maxlength: 140,
-      placeholder: "What did you learn?",
-      "aria-label": "What did you learn?",
-      oninput: () => {
-        clearTimeout(noteTimer);
-        noteTimer = setTimeout(() => options.save({ learned_what: noteField.value || null }), 700);
-      },
-      onkeydown: (event) => {
-        if (event.key === "Enter") {
-          clearTimeout(noteTimer);
-          options.save({ learned_what: noteField.value || null });
-        }
-      },
-    });
-    el.append(noteField);
-  }
 
   function setValue(next) {
     value.textContent = next.display == null ? "—" : next.display;
@@ -614,9 +596,9 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
 
     head.dataset.done = next.state === "done" ? "true" : "false";
     if (next.state === "done") {
-      if (!head.querySelector(".card-check")) head.insertBefore(checkMark(), points);
+      if (!valueRow.querySelector(".card-check")) valueRow.append(checkMark());
     } else {
-      head.querySelector(".card-check")?.remove();
+      valueRow.querySelector(".card-check")?.remove();
     }
 
     if (next.weight == null) {
@@ -635,14 +617,8 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
       points.append(h("small", {}, "/10"));
     }
 
-    note.textContent = next.gap;
-    note.dataset.state = next.state;
-
-    if (noteField) {
-      const wanted = next.sub == null ? "" : String(next.sub);
-      if (document.activeElement !== noteField && noteField.value !== wanted) noteField.value = wanted;
-      noteField.hidden = next.values?.learned !== true;
-    }
+    gap.textContent = next.gap;
+    gap.dataset.state = next.state;
 
     if (wasEmpty && next.display != null) {
       el.dataset.landed = "true";
@@ -654,7 +630,7 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
     el.dataset.editable = "true";
     el.addEventListener("click", (event) => {
       // Instruments answer in place; the rest of the card opens it up.
-      if (event.target.closest(".ins, .card-note")) return;
+      if (event.target.closest(".ins")) return;
       onOpen();
     });
   }

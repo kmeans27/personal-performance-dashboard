@@ -40,6 +40,12 @@ def stats() -> dict:
     return repository.stats()
 
 
+@router.get("/sources")
+def sources() -> dict:
+    """When each import source last posted, for the setup page."""
+    return {"sources": repository.source_status()}
+
+
 @router.get("/prefill")
 def prefill(day: str | None = None) -> dict:
     """Defaults for the logging flow: yesterday first, recent average as backup."""
@@ -95,7 +101,14 @@ def prefill(day: str | None = None) -> dict:
 def read_day(day: str, insight: bool = False) -> dict:
     _validate(day)
     entries, scores = _scored_window(day)
-    return build_day_payload(entries, scores, day, include_insight=insight, settings=repository.get_settings())
+    return build_day_payload(
+        entries,
+        scores,
+        day,
+        include_insight=insight,
+        settings=repository.get_settings(),
+        sources=repository.source_status(),
+    )
 
 
 @router.put("/day/{day}")
@@ -103,7 +116,13 @@ def write_day(day: str, payload: DayEntryIn) -> dict:
     _validate(day)
     repository.upsert_day(day, payload.values, source=payload.source)
     entries, scores = _scored_window(day)
-    return build_day_payload(entries, scores, day, settings=repository.get_settings())
+    return build_day_payload(
+        entries,
+        scores,
+        day,
+        settings=repository.get_settings(),
+        sources=repository.source_status(),
+    )
 
 
 @router.delete("/day/{day}")

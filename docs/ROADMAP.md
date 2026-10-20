@@ -1,9 +1,10 @@
 # Roadmap
 
-**The basis is v2.2.2.** The board is the dashboard: every field is answered in
-place, and every card opens into an instrument built around its value. Everything
-below builds on that — none of it changes the scoring model, what the fields mean,
-or the single-file storage.
+**The basis is v2.2.3.** The board is the dashboard: every field is answered in
+place, and every card opens into an instrument built around its value. The desktop
+pass added Main task and finished the rail. Everything below builds on that — the
+passes add surfaces and choice, not new scoring, and never change what the fields
+mean or the single-file storage.
 
 Three rules hold for every pass on this page:
 

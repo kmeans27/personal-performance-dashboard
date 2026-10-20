@@ -19,19 +19,20 @@
   /* ---- ink */
   --ink: #f2f3f5;
   --ink-2: #9aa0a6;
-  --ink-3: #737a83;
-  --ink-4: #4a5058;
+  /* The two quiet inks are still text: both clear 4.5:1 on every surface. */
+  --ink-3: #8c939c;
+  --ink-4: #7f8791;
 
   /* ---- one colour per category */
   --body: #43d6a0;
-  --mind: #7d93f5;
+  --mind: #9b8afb; /* violet, so it never reads as Attention blue */
   --attention: #5aa9f0;
   /* amber is not a category: it means "needs attention", nothing else */
   --amber: #f2a94e;
   --overall: #e9edf2;
 
   --body-dim: rgba(67, 214, 160, 0.15);
-  --mind-dim: rgba(125, 147, 245, 0.15);
+  --mind-dim: rgba(155, 138, 251, 0.15);
   --attention-dim: rgba(90, 169, 240, 0.15);
 
   /* ---- type */

@@ -581,22 +581,23 @@ function toggleEditor(tile, ctx, onSaved) {
     ),
   ];
 
-  /* Learned is the one switch that carries a sentence: choosing Yes opens the
-     note underneath, and the note is part of the same answer. */
+  /* A switch can carry a sentence: choosing Yes opens the note underneath,
+     and the note is part of the same answer. */
   let note = null;
   let noteTimer = null;
-  if (tile.id === "learned") {
+  const noteField = tile.note?.field;
+  if (noteField) {
     note = h("textarea", {
       class: "ed-noteinput",
       rows: 3,
       maxlength: 140,
-      placeholder: "One line: what did you learn?",
-      "aria-label": "What did you learn?",
+      placeholder: `One line: ${tile.note.prompt.toLowerCase()}`,
+      "aria-label": tile.note.prompt,
     });
     note.addEventListener("input", () => {
       clearTimeout(noteTimer);
       noteTimer = setTimeout(async () => {
-        await ctx.save?.({ learned_what: note.value || null });
+        await ctx.save?.({ [noteField]: note.value || null });
         onSaved?.();
       }, 600);
     });
@@ -613,7 +614,7 @@ function toggleEditor(tile, ctx, onSaved) {
     heroValue.textContent = value === true ? "Yes" : value === false ? "No" : "—";
     if (note) {
       learnedBox.hidden = value !== true;
-      const wanted = (ctx.tile?.() || tile).values?.learned_what || "";
+      const wanted = (ctx.tile?.() || tile).values?.[noteField] || "";
       if (document.activeElement !== note && note.value !== wanted) note.value = wanted;
     }
   }

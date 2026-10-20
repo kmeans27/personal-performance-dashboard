@@ -1,3 +1,6 @@
+from datetime import date
+
+
 def test_schema_exposes_categories_and_fields(client):
     data = client.get("/api/schema").json()
     assert [c["id"] for c in data["categories"]] == ["body", "mind", "attention"]
@@ -43,6 +46,38 @@ def test_range_and_import(client):
     data = client.get("/api/range", params={"start": "2026-05-01", "end": "2026-05-31"}).json()
     assert len(data["days"]) == 2
     assert data["days"][0]["total"] is not None
+
+
+def test_imports_remember_their_source(client):
+    before = client.get("/api/sources").json()["sources"]
+    assert [row["id"] for row in before] == ["apple-health", "screen-time"]
+    assert all(row["recent"] is False for row in before)
+
+    client.post(
+        "/api/import",
+        json={
+            "days": [
+                {
+                    "day": date.today().isoformat(),
+                    "values": {"steps": 8000},
+                    "source": "Apple Health",
+                }
+            ]
+        },
+    )
+    after = client.get("/api/sources").json()["sources"]
+    apple = next(row for row in after if row["id"] == "apple-health")
+    screen = next(row for row in after if row["id"] == "screen-time")
+    assert apple["recent"] is True
+    assert apple["received_at"]
+    assert screen["recent"] is False
+
+    # The card stays while a source is unproven, and can be dismissed.
+    payload = client.get("/api/today").json()
+    assert payload["sources"]["show"] is True
+    client.patch("/api/settings", json={"sources_dismissed": True})
+    payload = client.get("/api/today").json()
+    assert payload["sources"]["show"] is False
 
 
 def test_today_works_without_any_data(client):

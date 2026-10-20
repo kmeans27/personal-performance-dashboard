@@ -27,6 +27,19 @@ LEARNED = (
     "How to hold a tune without looking at the sheet",
 )
 
+MAIN_TASKS = (
+    "Ship the settings page",
+    "Finish the Q3 draft",
+    "Fix the import script",
+    "Write the client proposal",
+    "Clear the review queue",
+    "Plan the next release",
+    "Rewrite the onboarding copy",
+    "Close the budget spreadsheet",
+    "Prepare Thursday's demo",
+    "Read the two pending RFCs",
+)
+
 
 def _clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
@@ -148,6 +161,13 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
         pickups = int(_clamp(rng.gauss(58, 12) + (screen - 3) * 22, 15, 320) // 5 * 5)
         avoid = rng.random() < (0.92 if phase != "rough" else 0.55)
 
+        task_chance = 0.42 + 0.12 * blocks
+        if phase == "streak":
+            task_chance += 0.18
+        if phase == "rough":
+            task_chance -= 0.2
+        main_task = rng.random() < _clamp(task_chance, 0.2, 0.94)
+
         # ---- outcomes (mood/energy respond to the above, with noise)
         score_seed = (
             3.15
@@ -181,10 +201,13 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
             "energy": energy,
             "screen_hours": screen,
             "pickups": pickups,
+            "main_task": main_task,
             "avoid_habit": avoid,
         }
         if learned:
             values["learned_what"] = LEARNED[index % len(LEARNED)]
+        if main_task:
+            values["main_task_what"] = MAIN_TASKS[index % len(MAIN_TASKS)]
 
         entries.append({"day": day.isoformat(), "values": values, "source": "demo"})
 
@@ -208,6 +231,8 @@ def generate_days(days: int = DEMO_DAYS, end: date | None = None, seed: int = DE
             "energy": 4,
             "screen_hours": 2.5,
             "pickups": 44,
+            "main_task": True,
+            "main_task_what": "Finish the v2.2.3 desktop pass",
             "avoid_habit": True,
         }
     )

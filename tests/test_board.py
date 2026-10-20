@@ -20,6 +20,8 @@ FULL_DAY = {
     "energy": 4,
     "screen_hours": 2.5,
     "pickups": 44,
+    "main_task": True,
+    "main_task_what": "The one thing",
     "avoid_habit": True,
 }
 
@@ -208,6 +210,50 @@ def test_every_card_prices_itself_against_the_ring(client):
     # The body weights add up to the third of the score the category is worth.
     body = [tile for tile in board["tiles"] if tile["category"] == "body" and tile["weight"]]
     assert round(sum(tile["weight"] for tile in body), 4) == 1.0
+
+
+def test_main_task_is_the_attention_card_that_finishes_the_day(client):
+    day = date.today().isoformat()
+    board = client.put(
+        f"/api/day/{day}",
+        json={"values": {"main_task": True, "main_task_what": "Ship the pass"}},
+    ).json()["board"]
+
+    task = next(tile for tile in board["tiles"] if tile["id"] == "main_task")
+    assert task["category"] == "attention"
+    assert task["w"] == 2
+    assert task["chart"] == "switch"
+    assert task["display"] == "Yes"
+    assert task["points"] == 10
+    assert task["sub"] == "Ship the pass"
+    assert task["note"] == {"field": "main_task_what", "prompt": "What was it?"}
+
+    # The column still adds up to the third of the score Attention is worth.
+    attention = [
+        tile for tile in board["tiles"] if tile["category"] == "attention" and tile["weight"]
+    ]
+    assert round(sum(tile["weight"] for tile in attention), 4) == 1.0
+    order = [tile["id"] for tile in board["tiles"] if tile["category"] == "attention"]
+    assert order == ["screen_hours", "pickups", "main_task", "avoid_habit"]
+
+
+def test_zero_blocks_looks_like_zero_blocks(client):
+    """A zero is an answer, not one block: the next block is the dashed one."""
+    day = date.today().isoformat()
+    board = client.put(f"/api/day/{day}", json={"values": {"deep_blocks": 0}}).json()["board"]
+    blocks = next(tile for tile in board["tiles"] if tile["id"] == "deep_blocks")
+    assert blocks["state"] == "open"
+    assert blocks["filled"] == 0
+
+
+def test_the_rail_gets_the_three_best_moves(client):
+    board = tiles(client)
+    moves = board["next_moves"]
+    assert 1 <= len(moves) <= 3
+    assert moves[0] == board["next_move"]
+    assert [move["points"] for move in moves] == sorted(
+        (move["points"] for move in moves), reverse=True
+    )
 
 
 def test_unscored_cards_say_so(client):

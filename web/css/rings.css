@@ -71,10 +71,11 @@
   pointer-events: none;
 }
 
-/* The score scales with the ring, not the window: a rail ring and a full-page
-   ring can be the same drawing at two sizes. */
+/* The score scales with the ring, not the window. Three digits have to stay
+   inside the innermost arc: at 320 units the hole is about 100 wide, so the
+   type tops out at 20cqw — 7/8/100 each get their own size. */
 .ring-score {
-  font-size: clamp(1.4rem, 26cqw, 4.4rem);
+  font-size: clamp(1.2rem, 20cqw, 3.5rem);
   font-weight: 600;
   line-height: 0.92;
   letter-spacing: -0.045em;
@@ -83,27 +84,116 @@
   text-shadow: 0 0 24px rgba(255, 255, 255, 0.14);
 }
 
-.ring-score[data-empty="true"] {
-  font-size: clamp(0.95rem, 12cqw, 2rem);
-  color: var(--ink-3);
-  letter-spacing: -0.02em;
+.ring-score[data-digits="2"] {
+  font-size: clamp(1.5rem, 26cqw, 4.2rem);
 }
 
-.ring-score small {
-  font-size: 0.28em;
-  font-weight: 500;
+.ring-score[data-digits="1"] {
+  font-size: clamp(1.6rem, 30cqw, 4.6rem);
+}
+
+.ring-score[data-empty="true"] {
+  font-size: clamp(1.2rem, 22cqw, 3.4rem);
+  color: var(--ink-3);
   letter-spacing: 0;
-  color: var(--ink-4);
-  margin-left: 2px;
 }
 
 .ring-caption {
-  margin-top: var(--s-3);
+  position: absolute;
+  top: calc(50% + 13.5cqw);
+  left: 0;
+  right: 0;
+  margin: 0;
   font-size: var(--fs-2xs);
   font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--ink-3);
+}
+
+/* The caption clears the number whatever its length. */
+.ring-score[data-digits="3"] + .ring-caption {
+  top: calc(50% + 11cqw);
+}
+
+.ring-score[data-digits="1"] + .ring-caption {
+  top: calc(50% + 17cqw);
+}
+
+/* ------------------------------------------------------- the perfect day */
+
+.ring-sheen {
+  opacity: 0;
+}
+
+.ring-sheen circle {
+  stroke: color-mix(in srgb, currentColor 35%, white);
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.rings[data-perfect="true"] .ring-sheen {
+  animation: ring-sweep 2.4s var(--ease-inout) both;
+}
+
+.rings[data-perfect="true"] .ring-progress {
+  animation: ring-swell 2.6s var(--ease-out) both;
+}
+
+.rings[data-perfect="true"] .ring-score {
+  animation: ring-pulse 1.1s var(--ease-out) 1.35s both;
+}
+
+/* Settled: the same rings, a little brighter than an ordinary closed day. */
+.rings[data-perfect="done"] .ring-progress {
+  filter: drop-shadow(0 0 calc(var(--glow, 3px) * 1.45) color-mix(in srgb, currentColor 62%, transparent));
+}
+
+@keyframes ring-sweep {
+  0% {
+    opacity: 0;
+    transform: rotate(-90deg);
+  }
+  12% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(270deg);
+  }
+}
+
+@keyframes ring-swell {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 var(--glow, 3px) color-mix(in srgb, currentColor 55%, transparent));
+  }
+  42% {
+    filter: drop-shadow(0 0 calc(var(--glow, 3px) * 2.1) color-mix(in srgb, currentColor 78%, transparent))
+      brightness(1.18);
+  }
+}
+
+@keyframes ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 24px rgba(255, 255, 255, 0.14);
+  }
+  45% {
+    transform: scale(1.07);
+    text-shadow: 0 0 34px rgba(255, 255, 255, 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rings[data-perfect="true"] .ring-sheen,
+  .rings[data-perfect="true"] .ring-progress,
+  .rings[data-perfect="true"] .ring-score {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------------- mini rings */

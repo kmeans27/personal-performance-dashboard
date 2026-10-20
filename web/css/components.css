@@ -340,6 +340,60 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ------------------------------------------------------------ source setup */
+
+.source-setup-grid {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.source-guide {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.source-guide-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.source-guide-head h3 {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.source-status {
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
+
+.source-guide[data-synced="true"] .source-status {
+  color: var(--body);
+}
+
+.source-steps {
+  display: grid;
+  gap: var(--s-2);
+  padding-left: 1.2em;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.source-steps li::marker {
+  color: var(--ink-3);
+}
+
 /* --------------------------------------------------------------- loading */
 
 .loading {

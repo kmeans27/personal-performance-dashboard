@@ -8,14 +8,14 @@ Not a habit tracker. An instrument.
 
 ## Versions
 
-Pulse is built in passes, and the passes stack. **Latest: v2.2.2 — the instrument
-opens.** Next: **v2.3 — the phone.**
+Pulse is built in passes, and the passes stack. **Latest: v2.2.3 — desktop
+polish.** Next: **v2.3 — the phone.**
 
 | Pass | What it changed |
 | ---- | --------------- |
 | [0.1 – 0.2](docs/versions/v0.2.md) | The loop, then the board: the scoring, and every field for today on one non-scrolling screen, answered in place. |
 | [2.1 – 2.1.2](docs/versions/v2.1.md) | The interface: a shape per field, the density pass, and the one-screen home rework — rail, three category columns, score bar. |
-| [2.2 – 2.2.2](docs/versions/v2.2.2.md) | The editor: answer on the card, open the card for the exact answer, and log it in an instrument built around its value. |
+| [2.2 – 2.2.3](docs/versions/v2.2.3.md) | The editor and the desktop pass: answer on the card, open it for the exact answer, and keep the board to one screen — a rail that stacks, notes on their own row, a score bar grouped by category, and one quiet moment for a perfect day. |
 | 2.3 (next) | The phone: logging first, a dashboard built for glass, undo. |
 | 2.4 – 3.1 (planned) | Yours: card settings, the layout builder, the polish. |
 
@@ -31,9 +31,9 @@ the full ledger, with the numbering rules. The next four passes are in
    │      ╰─────╯  │      │ Inside 7–9 h     │ │ A full day │ │ 0.5h under   │
    │ so far        │      └──────────────────┘ └────────────┘ └──────────────┘
    │ YEST 93  USUAL 95    … one row per card, sized by what it holds …
-   │ NEXT BEST MOVE
+   │ NEXT BEST MOVES
    │ Clean day            +10
-   │ 1 of 30 days   [SHOW CARD]
+   │ 1 of 30 days
    │ THIS WEEK            91
    │ ◉ ● · · · · ·
    ├────────────────────────────────────────────────────────────────────────────
@@ -180,13 +180,15 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-**v2.2.2 — the instrument opens.** The whole loop works end to end: the whole day
-fits one screen at 1440×900 without scrolling, every field is answered in place on
-the board, and every card opens into a detail editor built around its value — the
-number is the input, and the field gets the control that fits it. The bed time is
-one entry; the wake time is arithmetic.
+**v2.2.3 — desktop polish.** The whole day still fits one screen at 1440×900
+without scrolling, but the board now says more with the same room. The rail stacks
+the larger ring, yesterday and usual, the three next best moves, the week and a
+Sources card that stays only until both imports are live. Main task joins Attention
+as a scored switch. Notes open as a full-width row under Read and Learned, and
+under Main task. Mood and energy are one row of chips. The score bar is grouped by
+category, and a perfect day gets one slow light sweep and a single pulse.
 
 This is the basis everything else builds on: the board, the scoring and the
-instrument catalogue are settled, and the next passes add surfaces and choice
-rather than changing what is measured. Next: **v2.3 — the phone**
-([roadmap](docs/ROADMAP.md#v23--the-phone)).
+instrument catalogue — now with Main task — are settled, and the next passes add
+surfaces and choice rather than changing what is measured. Next: **v2.3 — the
+phone** ([roadmap](docs/ROADMAP.md#v23--the-phone)).

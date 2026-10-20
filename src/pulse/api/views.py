@@ -389,10 +389,11 @@ def _tile_payload(
     if card and not tracked:
         display, progress = None, None
 
-    if tile.id == "learned":
-        note = values.get("learned_what")
+    note_field = primary.value_field if primary and primary.value_field else ""
+    if note_field:
+        note = values.get(note_field)
         sub = str(note) if note else None
-    elif tile.id == "weight":
+    if tile.id == "weight":
         raw = settings.get("weight_goal")
         if raw:
             goal = float(raw)
@@ -431,7 +432,8 @@ def _tile_payload(
     if tile.chart in ("segments", "blocks") and card and tracked:
         filled = max(0, min(tile.cells, int(round(float(card["count"])))))
     elif tile.chart in ("segments", "blocks") and answered:
-        filled = min(tile.cells, int(round(float(values.get(primary.id) or 0)))) or 1
+        # Zero is a real answer for a count: it must not look like one block.
+        filled = max(0, min(tile.cells, int(round(float(values.get(primary.id) or 0)))))
 
     caption = "Not logged yet" if empty else (card["caption"] if card else tile.target)
 
@@ -472,6 +474,15 @@ def _tile_payload(
         "display": display,
         "unit": unit,
         "sub": sub,
+        # the companion note a yes/no can ask for, drawn as its own row below
+        "note": (
+            {
+                "field": note_field,
+                "prompt": (M.METRIC_INDEX[note_field].label if note_field in M.METRIC_INDEX else ""),
+            }
+            if note_field
+            else None
+        ),
         "progress": round(progress, 4) if progress is not None else None,
         "cells": tile.cells,
         "filled": filled,
@@ -533,32 +544,35 @@ def build_board_payload(
 
     daily = [t for t in tiles if not t["weekly"] and not t["optional"]]
     logged = len([t for t in daily if t["settled"]])
+    moves = _next_moves(tiles)
     return {
         "tiles": tiles,
         "daily_total": len(daily),
         "daily_logged": logged,
         "complete": bool(daily) and logged == len(daily),
-        "next_move": _next_move(tiles),
+        "next_move": moves[0] if moves else None,
+        "next_moves": moves,
     }
 
 
-def _next_move(tiles: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """The open card that would move the total score most, priced honestly."""
+def _next_moves(tiles: list[dict[str, Any]], limit: int = 3) -> list[dict[str, Any]]:
+    """The open cards that would move the total most, priced honestly."""
     open_cards = [
         tile for tile in tiles
         if tile.get("stake") and (tile["state"] != "done")
     ]
-    if not open_cards:
-        return None
     order = {tile.id: index for index, tile in enumerate(M.TILES)}
-    best = max(open_cards, key=lambda tile: (tile["stake"], -order[tile["id"]]))
-    return {
-        "id": best["id"],
-        "label": best["label"],
-        "category": best["category"],
-        "line": best["gap"],
-        "points": max(1, int(round(best["stake"]))),
-    }
+    open_cards.sort(key=lambda tile: (-tile["stake"], order[tile["id"]]))
+    return [
+        {
+            "id": tile["id"],
+            "label": tile["label"],
+            "category": tile["category"],
+            "line": tile["gap"],
+            "points": max(1, int(round(tile["stake"]))),
+        }
+        for tile in open_cards[:limit]
+    ]
 
 
 def _compare(scores: dict[str, analytics.DayScore], day: str) -> dict[str, Any]:
@@ -597,12 +611,38 @@ def _week(scores: dict[str, analytics.DayScore], day: str) -> list[dict[str, Any
     return out
 
 
+def sources_payload(
+    sources: Sequence[dict[str, Any]] | None,
+    settings: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    """The small Sources card, or None when there is nothing to say (demo)."""
+    if sources is None:
+        return None
+    settings = settings or {}
+    rows = [
+        {
+            "id": source.get("id"),
+            "label": source.get("label"),
+            "received_at": source.get("received_at"),
+            "recent": bool(source.get("recent")),
+        }
+        for source in sources
+    ]
+    dismissible = not settings.get("sources_dismissed", False)
+    return {
+        # It stays only while something is still unproven, or until dismissed.
+        "show": bool(dismissible and not all(row["recent"] for row in rows)),
+        "rows": rows,
+    }
+
+
 def build_day_payload(
     entries: Sequence[dict[str, Any]],
     scores: dict[str, analytics.DayScore],
     day: str,
     include_insight: bool = False,
     settings: dict[str, Any] | None = None,
+    sources: Sequence[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     score = scores.get(day)
     values = next((e["values"] for e in entries if e["day"] == day), {})
@@ -628,6 +668,7 @@ def build_day_payload(
         "focus": focus,
         "weekly": weekly,
         "board": build_board_payload(values, score, weekly, settings, entries, day),
+        "sources": sources_payload(sources, settings),
         "consistency": {
             "days_logged_30": len(logged_recent),
             "days_logged_total": len(entries),

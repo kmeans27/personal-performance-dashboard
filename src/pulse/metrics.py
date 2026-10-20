@@ -25,7 +25,7 @@ class Category:
 
 CATEGORIES: tuple[Category, ...] = (
     Category("body", "Body", "#43D6A0", "The machine you live in."),
-    Category("mind", "Mind", "#7D93F5", "Deliberate thinking and learning."),
+    Category("mind", "Mind", "#9B8AFB", "Deliberate thinking and learning."),
     Category("attention", "Attention", "#5AA9F0", "Where your hours actually go."),
 )
 
@@ -249,7 +249,7 @@ METRICS: tuple[Metric, ...] = (
         label="Screen time",
         category="attention",
         scorer="screen_time",
-        weight=0.45,
+        weight=0.35,
         input="number",
         unit="h",
         min=0,
@@ -265,7 +265,7 @@ METRICS: tuple[Metric, ...] = (
         label="Phone pickups",
         category="attention",
         scorer="pickups",
-        weight=0.25,
+        weight=0.15,
         input="number",
         unit="",
         min=0,
@@ -276,11 +276,24 @@ METRICS: tuple[Metric, ...] = (
         prompt="Phone pickups",
     ),
     _m(
+        id="main_task",
+        label="Main task",
+        category="attention",
+        scorer="boolean",
+        weight=0.30,
+        input="toggle",
+        prompt="Did you finish the one thing that mattered most today?",
+        help="One thing, chosen in the morning. The note is part of the answer.",
+        value_field="main_task_what",
+    ),
+    _m(id="main_task_what", label="What was it?", category="attention", scorer="none",
+       input="text", prompt="Write down the one thing.", scored=False),
+    _m(
         id="avoid_habit",
         label="Clean day",
         category="attention",
         scorer="avoid",
-        weight=0.30,
+        weight=0.20,
         input="toggle",
         prompt="Did you stay clean today?",
         help="Scored over the last fortnight, shown as days clean in 30.",
@@ -345,11 +358,11 @@ TILES: tuple[Tile, ...] = (
     Tile("steps", "body", "bar", ("steps",), target="Target 9,000 steps"),
     Tile(
         "gym", "body", "segments", ("gym",), cells=3, weekly=True,
-        label="Gym", unit="sessions",
+        label="Gym", target="2–3 sessions a week", unit="sessions",
     ),
     Tile(
         "alcohol", "body", "segments", ("alcohol",), cells=7,
-        weekly=True, label="Alcohol-free", unit="days",
+        weekly=True, label="Alcohol-free", target="Seven clean days", unit="days",
     ),
     Tile("outdoor", "body", "bar", ("outdoor",), target="20 min outside"),
     Tile("greens", "body", "switch", ("greens",), label="Greens", target="Fruit or veg today"),
@@ -382,6 +395,10 @@ TILES: tuple[Tile, ...] = (
     Tile(
         "pickups", "attention", "range", ("pickups",), w=2,
         label="Pickups", target="Under 60", track=(0, 150), zone=(0, 60),
+    ),
+    Tile(
+        "main_task", "attention", "switch", ("main_task", "main_task_what"), w=2,
+        label="Main task", target="The one thing that mattered most",
     ),
     Tile(
         "avoid_habit", "attention", "bar", ("avoid_habit",), w=2,

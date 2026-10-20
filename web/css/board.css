@@ -8,7 +8,7 @@ body[data-board="true"] .page {
   min-height: calc(100dvh - var(--chrome-h));
   display: grid;
   align-content: stretch;
-  padding: clamp(12px, 1.7vh, 22px) clamp(14px, 1.7vw, 30px);
+  padding: clamp(10px, 1.5vh, 19px) clamp(14px, 1.7vw, 30px);
 }
 
 body[data-board="true"] .footnote {
@@ -44,8 +44,9 @@ body[data-board="true"] .footnote {
   grid-area: rail;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(10px, 1.6vh, 20px);
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: clamp(8px, 1.1vh, 13px);
   min-width: 0;
   min-height: 0;
 }
@@ -73,7 +74,7 @@ body[data-board="true"] .footnote {
 }
 
 .rail-rings .rings {
-  width: min(100%, clamp(150px, 26vh, 288px));
+  width: min(100%, clamp(160px, 29vh, 300px));
 }
 
 /* Yesterday and the usual: two plain numbers, no line, no trend. */
@@ -81,14 +82,8 @@ body[data-board="true"] .footnote {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s-3);
-  padding-top: clamp(8px, 1.2vh, 14px);
+  padding-top: clamp(7px, 0.9vh, 11px);
   border-top: 1px solid var(--line);
-}
-
-.rail-mid {
-  display: grid;
-  gap: clamp(10px, 1.6vh, 20px);
-  min-width: 0;
 }
 
 .compare-cell {
@@ -103,16 +98,16 @@ body[data-board="true"] .footnote {
 }
 
 .compare-value {
-  font-size: clamp(1.1rem, 2.4vh, 1.4rem);
+  font-size: clamp(1.05rem, 2.1vh, 1.3rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink-2);
 }
 
-/* The one open card worth the most, priced in points of the score. */
-.move {
+/* The three open cards worth the most, priced in points of the score. */
+.moves {
   display: grid;
-  gap: var(--s-2);
+  gap: 5px;
   min-width: 0;
 }
 
@@ -120,24 +115,34 @@ body[data-board="true"] .footnote {
   color: var(--amber);
 }
 
-.move-card {
+.move-list {
   display: grid;
-  gap: 6px;
-  width: 100%;
-  padding: clamp(10px, 1.4vh, 15px) clamp(12px, 1vw, 16px);
+  overflow: hidden;
   border-radius: var(--r-md);
-  border: 1px solid color-mix(in srgb, var(--amber) 30%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--amber) 28%, var(--line));
   background: var(--surface);
+}
+
+.move-item {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  padding: 6px clamp(10px, 0.9vw, 14px);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
   text-align: left;
-  transition: border-color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
+  cursor: pointer;
+  transition: background var(--dur-2) var(--ease-out);
 }
 
-.move-card:hover {
+.move-item:last-child {
+  border-bottom: 0;
+}
+
+.move-item:hover,
+.move-item:focus-visible {
   background: var(--surface-2);
-}
-
-.move-card--clear {
-  border-color: var(--line);
 }
 
 .move-head {
@@ -148,39 +153,51 @@ body[data-board="true"] .footnote {
 }
 
 .move-label {
-  font-size: var(--fs-md);
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: -0.015em;
+  color: var(--ink);
 }
 
 .move-points {
-  font-size: var(--fs-md);
+  font-size: 13px;
   font-weight: 650;
   color: var(--amber);
 }
 
 .move-line {
-  font-size: 13px;
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: var(--ink-2);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.move-empty {
+  display: grid;
+  gap: 3px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.move-empty b {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.move-empty span {
+  font-size: 12px;
   line-height: 1.35;
   color: var(--ink-2);
-}
-
-.move-go {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.move-card:hover .move-go {
-  color: var(--ink);
 }
 
 /* Monday to Sunday, one small ring per day. */
 .week {
   display: grid;
-  gap: var(--s-2);
+  gap: 5px;
   min-width: 0;
 }
 
@@ -207,8 +224,8 @@ body[data-board="true"] .footnote {
 .week-cell {
   display: grid;
   justify-items: center;
-  gap: 3px;
-  padding: 6px 0 5px;
+  gap: 2px;
+  padding: 4px 0 3px;
   border-radius: var(--r-sm);
   color: var(--ink-3);
   transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
@@ -225,8 +242,13 @@ body[data-board="true"] .footnote {
   color: var(--ink);
 }
 
+/* Empty days stay legible: quiet ink, not transparency. */
 .week-cell[data-empty="true"] {
-  opacity: 0.5;
+  color: var(--ink-4);
+}
+
+.week-cell[data-empty="true"] .week-ring {
+  opacity: 0.55;
 }
 
 .week-ring {
@@ -250,6 +272,85 @@ body[data-board="true"] .footnote {
   color: var(--ink-2);
 }
 
+/* Import sources: two honest rows, until both are proven or hidden. */
+.sources {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.sources[hidden] {
+  display: none;
+}
+
+.sources-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.sources-hide {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.sources-hide:hover {
+  color: var(--ink);
+}
+
+.source-list {
+  display: grid;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.source-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.source-row:last-child {
+  border-bottom: 0;
+}
+
+.source-name {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.source-time {
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.source-setup {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--amber) 82%, var(--ink));
+  white-space: nowrap;
+}
+
+.source-setup:hover {
+  color: var(--amber);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ------------------------------------------------------------------ main */
 
 .main {
@@ -263,10 +364,10 @@ body[data-board="true"] .footnote {
 
 .cat {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
   gap: var(--s-2);
   min-width: 0;
-  min-height: 0;
 }
 
 .cat-head {
@@ -314,13 +415,14 @@ body[data-board="true"] .footnote {
   color: color-mix(in srgb, var(--accent) 70%, var(--ink-3));
 }
 
-/* Two card slots per column, every row full — no field is ever half a row. */
+/* Two card slots per column, every row full — no field is ever half a row.
+   Rows are as tall as their contents: nothing is stretched to fill a column. */
 .cat-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(116px, auto);
-  gap: clamp(6px, 0.9vh, 10px);
-  min-height: 0;
+  grid-auto-rows: auto;
+  align-items: start;
+  gap: clamp(6px, 0.85vh, 9px);
 }
 
 /* ---------------------------------------------------------------- a card */
@@ -329,11 +431,10 @@ body[data-board="true"] .footnote {
   container: card / inline-size;
   position: relative;
   display: grid;
-  grid-template-rows: auto minmax(min-content, 1fr) auto;
-  gap: clamp(3px, 0.6vh, 7px);
-  min-height: 116px;
+  grid-template-rows: auto auto;
+  gap: 5px;
   min-width: 0;
-  padding: clamp(7px, calc(3px + 0.7vh), 11px) clamp(10px, 0.85vw, 16px);
+  padding: 7px clamp(10px, 0.8vw, 14px);
   border-radius: var(--r-md);
   border: 1px solid var(--line);
   background: var(--surface);
@@ -350,8 +451,8 @@ body[data-board="true"] .footnote {
   border-style: dashed;
 }
 
-.card[data-state="empty"][data-optional="true"] {
-  opacity: 0.8;
+.card[data-state="empty"][data-optional="true"] .card-label {
+  color: var(--ink-4);
 }
 
 .card:hover {
@@ -369,9 +470,8 @@ body[data-board="true"] .footnote {
 }
 
 .card-head {
-  display: flex;
-  align-items: baseline;
-  gap: clamp(6px, 0.6vw, 12px);
+  display: grid;
+  gap: 0;
   width: 100%;
   min-width: 0;
   padding: 0;
@@ -382,6 +482,21 @@ body[data-board="true"] .footnote {
   text-align: left;
   cursor: pointer;
   appearance: none;
+}
+
+.card-head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.card-head-value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
 }
 
 .card-head:focus-visible {
@@ -400,9 +515,11 @@ body[data-board="true"] .footnote {
 }
 
 .card-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--ink-2);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -416,9 +533,9 @@ body[data-board="true"] .footnote {
   display: flex;
   align-items: baseline;
   gap: 3px;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 600;
-  line-height: 1.05;
+  line-height: 1;
   letter-spacing: -0.035em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -445,11 +562,10 @@ body[data-board="true"] .footnote {
 }
 
 .card-points {
-  margin-left: auto;
   display: flex;
   align-items: baseline;
   gap: 1px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--ink-2);
   white-space: nowrap;
@@ -469,7 +585,7 @@ body[data-board="true"] .footnote {
 }
 
 .card-gap {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.25;
   color: var(--ink-2);
   overflow: hidden;
@@ -482,21 +598,62 @@ body[data-board="true"] .footnote {
   color: var(--ink-3);
 }
 
-.card-note {
-  grid-column: 1 / -1;
-  width: 100%;
-  min-width: 0;
-  padding: 5px 8px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--line-2);
-  background: var(--bg);
-  color: var(--ink);
-  font: inherit;
-  font-size: 12px;
+/* Mood and energy explain themselves above the chips; the score chip already
+   says they do not count. */
+.card[data-chart="scale"] .card-gap {
+  display: none;
 }
 
-.card-note::placeholder {
+/* The note is a row of the grid, not a corner of the card: it spans the pair
+   and slides in under it the moment the answer is Yes. */
+.card-note-row {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.card-note-row[hidden] {
+  display: none;
+}
+
+.card-note-inner {
+  display: grid;
+  min-width: 0;
+}
+
+.card-note-row[data-open="true"] .card-note-inner {
+  animation: note-in var(--dur-2) var(--ease-out) both;
+}
+
+.note-input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 11px;
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line-2));
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.note-input::placeholder {
   color: var(--ink-4);
+}
+
+.note-input:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 1px;
+}
+
+@keyframes note-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .card[data-pulse="true"] {
@@ -556,9 +713,7 @@ body[data-board="true"] .footnote {
 .ins-track {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 8px;
-  max-height: 112px;
+  height: 14px;
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.05);
 }
@@ -636,9 +791,7 @@ body[data-board="true"] .footnote {
   display: flex;
   gap: clamp(3px, 0.5vw, 7px);
   width: 100%;
-  height: 100%;
-  min-height: 8px;
-  max-height: 22px;
+  height: 18px;
 }
 
 .dash {
@@ -671,7 +824,7 @@ body[data-board="true"] .footnote {
 /* ---- a big count: one block each ---------------------------------------- */
 
 .ins--blocks {
-  height: 100%;
+  height: 36px;
 }
 
 .ins-blocks {
@@ -679,15 +832,15 @@ body[data-board="true"] .footnote {
   gap: clamp(4px, 0.7vw, 10px);
   width: 100%;
   height: 100%;
-  min-height: 0;
 }
 
 .block {
+  position: relative;
   flex: 1;
   height: 100%;
   min-height: 14px;
   border-radius: var(--r-sm);
-  border: 1px dashed var(--line-2);
+  border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.025);
   transition: background var(--dur-3) var(--ease-out), border-color var(--dur-3) var(--ease-out);
 }
@@ -696,23 +849,49 @@ body[data-board="true"] .footnote {
   border-color: var(--ink-3);
 }
 
+/* Earned: solid, unmistakably filled. */
 .block[data-filled="true"] {
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  background: color-mix(in srgb, var(--accent) 24%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: var(--accent);
+}
+
+/* The one you would earn next: a dashed invitation, never a filled block. */
+.block[data-next="true"] {
+  border: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.block[data-next="true"]::after {
+  content: "+";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: color-mix(in srgb, var(--accent) 75%, var(--ink-3));
 }
 
 /* ---- a yes/no: two explicit segments ------------------------------------ */
 
 .ins--switch {
-  align-items: stretch;
+  align-items: start;
   gap: clamp(4px, 0.5vw, 8px);
+  height: 44px;
+}
+
+/* A full-width switch says the same thing without two giant bars: the answer
+   is a pair of 48-ish buttons, not a wall. */
+.card[data-w="2"] .ins--switch {
+  width: min(100%, 300px);
 }
 
 .choice {
   flex: 1;
   display: grid;
   place-items: center;
-  min-height: 14px;
+  height: 44px;
   line-height: 1;
   border-radius: var(--r-sm);
   border: 1px solid var(--line);
@@ -735,68 +914,85 @@ body[data-board="true"] .footnote {
   color: #0a0b0d;
 }
 
-/* ---- a felt 1–5: five steps, the usual ticked --------------------------- */
+/* ---- a felt 1–5: one row of five chips, the usual ticked ---------------- */
 
 .ins--steps {
+  display: grid;
+  gap: 4px;
   width: 100%;
+}
+
+.ins-prompt {
+  font-size: 12px;
+  line-height: 1.1;
+  color: var(--ink-3);
 }
 
 .ins-steps {
   display: flex;
-  gap: clamp(3px, 0.45vw, 7px);
+  gap: clamp(3px, 0.4vw, 6px);
   width: 100%;
-  height: 100%;
-  min-height: 0;
+  height: 30px;
 }
 
 .step {
   position: relative;
   flex: 1;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
-  min-height: 0;
-  padding-top: 2px;
+  padding: 0 4px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
 }
 
 .step i {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 18px;
-  border-radius: var(--r-xs);
-  background: rgba(255, 255, 255, 0.055);
-  transition: background var(--dur-2) var(--ease-out);
+  display: none;
 }
 
 .step span {
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1;
   text-align: center;
-  color: var(--ink-4);
+  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.step[data-filled="true"] i {
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
+.step[data-filled="true"] {
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
+  background: color-mix(in srgb, var(--accent) 17%, transparent);
 }
 
-.step[data-on="true"] i {
+.step[data-filled="true"] span {
+  color: var(--ink-2);
+}
+
+.step[data-on="true"] {
+  border-color: transparent;
   background: var(--accent);
 }
 
 .step[data-on="true"] span {
-  color: var(--ink-2);
+  color: #0a0b0d;
+  font-weight: 650;
 }
 
-/* Your usual, as a tick above the step it sits on. */
+.step:hover {
+  border-color: var(--line-2);
+}
+
+/* Your usual, as a tick above the chip it sits on. */
 .step[data-usual="true"]::before {
   content: "";
   position: absolute;
-  top: -4px;
+  top: -5px;
   left: 50%;
   width: 10px;
   height: 2px;
@@ -809,10 +1005,9 @@ body[data-board="true"] .footnote {
 
 .ins--bed {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: 16px auto;
   align-items: end;
-  gap: clamp(2px, 0.4vh, 5px);
-  min-height: 0;
+  gap: 5px;
   touch-action: none;
   cursor: ew-resize;
 }
@@ -826,9 +1021,7 @@ body[data-board="true"] .footnote {
 .bed-track {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 8px;
-  max-height: 26px;
+  height: 16px;
   align-self: end;
   border-radius: var(--r-full);
   background: rgba(255, 255, 255, 0.05);
@@ -901,10 +1094,9 @@ body[data-board="true"] .footnote {
 .ins-clean {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  grid-auto-rows: 11px;
   gap: clamp(2px, 0.35vw, 5px);
   width: 100%;
-  height: 100%;
 }
 
 .clean-day {
@@ -929,7 +1121,7 @@ body[data-board="true"] .footnote {
 .breakdown {
   grid-area: bar;
   display: grid;
-  gap: clamp(5px, 0.8vh, 9px);
+  gap: clamp(4px, 0.55vh, 6px);
   min-width: 0;
 }
 
@@ -961,42 +1153,126 @@ body[data-board="true"] .footnote {
 
 .segments {
   display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.seg-group {
+  flex: 1 1 0;
+  display: grid;
   gap: 3px;
-  height: clamp(16px, 2.4vh, 24px);
+  min-width: 0;
+}
+
+.seg-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: 0 1px;
+}
+
+.seg-group-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+}
+
+.seg-group-score {
+  font-size: 12px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+
+.seg-group-score[data-empty="true"] {
+  color: var(--ink-3);
+}
+
+.seg-group-track {
+  display: flex;
+  gap: 3px;
+  height: clamp(16px, 2vh, 20px);
 }
 
 .seg {
   position: relative;
   flex: 1 1 0;
-  min-width: 5px;
+  min-width: 4px;
   padding: 0;
+  border: 0;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.055);
-  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  cursor: pointer;
   overflow: hidden;
-  transition: background var(--dur-2) var(--ease-out);
+  container: seg / inline-size;
+  transition: background var(--dur-2) var(--ease-out), filter var(--dur-2) var(--ease-out);
 }
 
 .seg:hover {
-  background: rgba(255, 255, 255, 0.1);
+  filter: brightness(1.35);
 }
 
 .seg[data-logged="false"] {
   background: none;
-  border: 1px dashed var(--line-2);
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  outline: 1px dashed var(--line-2);
+  outline-offset: -2px;
+}
+
+.seg[data-move="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 2px solid var(--amber);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.seg[data-move="true"][data-logged="false"] {
+  outline-color: transparent;
 }
 
 .seg-fill {
   position: absolute;
   inset: 0 auto 0 0;
   width: 0;
-  background: color-mix(in srgb, var(--ink) 76%, transparent);
+  background: var(--accent);
   transition: width var(--dur-ring) var(--ease-spring);
 }
 
 .seg[data-logged="false"] .seg-fill {
   display: none;
+}
+
+/* The name only appears where the segment is wide enough to carry it. */
+.seg-name {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.seg[data-logged="false"] .seg-name {
+  color: var(--ink-3);
+  text-shadow: none;
+}
+
+@container seg (min-width: 78px) {
+  .seg-name {
+    display: flex;
+  }
 }
 
 /* ------------------------------------------------------------- responsive */
@@ -1014,33 +1290,42 @@ body[data-board="true"] .footnote {
 
   .rail {
     display: grid;
-    grid-template-columns: auto minmax(0, 1.6fr) minmax(0, 1fr);
-    align-items: center;
-    gap: var(--s-5);
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "top compare week"
+      "top moves sources";
+    align-items: start;
+    gap: 12px 22px;
   }
 
   .rail-top {
+    grid-area: top;
+    align-self: center;
     justify-items: start;
     gap: 4px;
   }
 
   .rail-rings .rings {
-    width: clamp(96px, 13vh, 148px);
+    width: clamp(110px, 15vh, 164px);
   }
 
   .rail-compare {
+    grid-area: compare;
     border-top: none;
     padding-top: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .rail-mid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    align-items: center;
+  .moves {
+    grid-area: moves;
   }
 
-  .move {
-    align-content: start;
+  .week {
+    grid-area: week;
+  }
+
+  .sources {
+    grid-area: sources;
   }
 }
 
@@ -1061,6 +1346,12 @@ body[data-board="true"] .footnote {
 
   .rail {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "top"
+      "compare"
+      "moves"
+      "week"
+      "sources";
     justify-items: start;
     gap: var(--s-5);
   }
@@ -1074,15 +1365,16 @@ body[data-board="true"] .footnote {
     width: min(62vw, 220px);
   }
 
-  .rail-compare,
-  .rail-mid {
+  .rail-compare {
     width: 100%;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-4);
   }
 
-  .rail-mid {
-    gap: var(--s-5);
+  .moves,
+  .week,
+  .sources {
+    width: 100%;
   }
 
   .week-row {
@@ -1112,65 +1404,12 @@ body[data-board="true"] .footnote {
 /* Short windows: keep the rail's numbers, drop the air. */
 @media (max-height: 760px) {
   .rail-rings .rings {
-    width: clamp(130px, 24vh, 210px);
-  }
-
-  .ins-steps {
-    min-height: 0;
+    width: clamp(140px, 26vh, 230px);
   }
 }
 
-/* A wide, tall window gives every card its share of the height, so the
-   instruments can grow into the room they are given. The card's height is set
-   by the grid here, never by its own contents, which is what makes the size
-   queries below safe. */
-@media (min-width: 1181px) and (min-height: 861px) {
-  .board:not(.board--framed) {
-    min-height: calc(100dvh - var(--chrome-h) - 48px);
-    grid-template-rows: minmax(0, 1fr) auto;
-    align-content: stretch;
-  }
-
-  .cat-cards {
-    grid-auto-rows: minmax(0, 1fr);
-  }
-
-  .card {
-    min-height: 0;
-  }
-
-  .card-value {
-    font-size: 1.75rem;
-  }
-
-  .ins-track {
-    max-height: 104px;
-  }
-
-  .ins-mark {
-    box-shadow: 0 0 0 4px var(--surface-2), 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
-  }
-
-  .ins--scale[data-beyond="true"] .ins-mark {
-    box-shadow: inset 0 0 0 4px var(--accent), 0 0 0 4px var(--surface-2);
-  }
-
-  .ins-dashes {
-    max-height: 26px;
-  }
-
-  .step i {
-    min-height: 34px;
-  }
-
-  .bed-track {
-    max-height: 26px;
-  }
-}
-
-/* A narrow card puts its name on its own line and its number below, so a long
-   value never eats the label. The gap line is held to one line for the same
-   reason: a wrapped line would eat the instrument's room. */
+/* A narrow card holds its gap line to one line, so a wrapped sentence never
+   makes two cards that should match drift apart. */
 @container card (max-width: 208px) {
   .card-gap {
     white-space: nowrap;
@@ -1179,18 +1418,8 @@ body[data-board="true"] .footnote {
     -webkit-line-clamp: 1;
   }
 
-  .card-head {
-    flex-wrap: wrap;
-    gap: 1px 5px;
-  }
-
-  .card-label {
-    flex: 0 0 100%;
-    font-size: 12px;
-  }
-
   .card-value {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
   }
 
   .card-points small {
@@ -1202,7 +1431,7 @@ body[data-board="true"] .footnote {
   }
 
   .step span {
-    display: none;
+    font-size: 10.5px;
   }
 }
 

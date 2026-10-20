@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from datetime import datetime, timedelta, timezone
+from typing import Any, Iterable
 
 from . import db
 
@@ -12,7 +13,31 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "gym_target": 2.5,
     "weight_goal": None,
     "week_starts_on": "monday",
+    "sources_dismissed": False,
 }
+
+# The two sources the dashboard knows how to explain. Imports can carry any
+# `source` string; only these two get a row on Today.
+SOURCES: tuple[dict[str, str], ...] = (
+    {"id": "apple-health", "label": "Apple Health"},
+    {"id": "screen-time", "label": "Screen Time"},
+)
+
+SOURCE_ALIASES = {
+    "applehealth": "apple-health",
+    "health": "apple-health",
+    "health-connect": "apple-health",
+    "healthconnect": "apple-health",
+    "screentime": "screen-time",
+    "screen": "screen-time",
+}
+
+
+def normalize_source(source: str) -> str:
+    """Map "Apple Health", "apple_health" and friends onto one id."""
+    key = str(source or "").strip().lower().replace("_", "-").replace(" ", "-")
+    key = SOURCE_ALIASES.get(key, key)
+    return key
 
 
 def get_day(day: str) -> dict[str, Any] | None:
@@ -70,7 +95,48 @@ def delete_day(day: str) -> bool:
 def import_days(entries: list[dict[str, Any]]) -> int:
     for entry in entries:
         upsert_day(entry["day"], entry.get("values", {}), source=entry.get("source", "import"))
+    record_imports(entry.get("source", "import") for entry in entries)
     return len(entries)
+
+
+# ------------------------------------------------------------------ sources
+# Provenance is tracked separately from the day rows: a later manual edit must
+# not erase the fact that Apple Health delivered something this morning.
+
+
+def record_imports(sources: Iterable[str]) -> None:
+    stamp = db.now_iso()
+    unique = {normalize_source(source) for source in sources if source}
+    if not unique:
+        return
+    with db.connection() as conn:
+        for source in unique:
+            conn.execute(
+                "INSERT INTO imports (source, received_at) VALUES (?, ?) "
+                "ON CONFLICT(source) DO UPDATE SET received_at = excluded.received_at",
+                (source, stamp),
+            )
+
+
+def source_status(hours: int = 36) -> list[dict[str, Any]]:
+    """The known sources, with the last time each one posted and whether that
+    was recent enough to count as 'set up and working'."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    stored: dict[str, str] = {}
+    with db.connection() as conn:
+        for row in conn.execute("SELECT source, received_at FROM imports"):
+            stored[row["source"]] = row["received_at"]
+    out: list[dict[str, Any]] = []
+    for source in SOURCES:
+        received = stored.get(source["id"])
+        recent = False
+        if received:
+            try:
+                recent = datetime.fromisoformat(received) >= cutoff
+            except ValueError:  # pragma: no cover - defensive
+                recent = False
+        out.append({**source, "received_at": received, "recent": recent})
+    return out
 
 
 # ------------------------------------------------------------------ settings
