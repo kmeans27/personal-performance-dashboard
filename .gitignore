@@ -6,3 +6,6 @@ __pycache__/
 *.db-journal
 .pytest_cache/
 .DS_Store
+
+# Local captures can contain personal data; they are not for the public repo.
+/screenshots/

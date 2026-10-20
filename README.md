@@ -8,47 +8,47 @@ Not a habit tracker. An instrument.
 
 ## Versions
 
-Newest first. Every release is specified in its own file; the full ledger is in
-[versions.md](versions.md).
+Pulse is built in passes, and the passes stack. **Latest: v2.2.2 — the instrument
+opens.** Next: **v2.3 — the phone.**
 
-| Version | Status | What it did |
-| ------- | ------ | ----------- |
-| [v2.3](v2.3.md) | 🚧 Planned | Undo, and the pointer and focus pass. |
-| [v2.2.2](v2.2.2.md) | ✅ Shipped | The instrument opens. Every card's detail editor is rebuilt around its value: the big number is the input, the status is one sentence, and each field gets the control it deserves — a gauge, a goal-centred weight scale, a five-bar ladder, doors, a seven-day mixer, a thirty-day grid, a night strip. |
-| [v2.2.1](v2.2.1.md) | ✅ Shipped | Open it up. In bed takes one entry — the wake is derived from your sleep — on a 21:00–02:00 axis with your usual window. Every card opens into a detail editor shaped to its field, and the weekly cards let you fix any day the score counts. |
-| [v2.2](v2.2.md) | ✅ Shipped (early) | Log it on the board: every field answered where it is read. Landed inside v2.1.2. |
-| [v2.1.2](v2.1.2.md) | ✅ Shipped | The home screen rework. One screen of instruments: a rail with the score, yesterday, usual, the next best move and the week; three category columns; a score bar at the bottom. The cards are the only inputs — no sheet. |
-| [v2.1.1](v2.1.1.md) | ✅ Shipped | The density pass. Nothing stretches to fill the screen: a field is as big as what it holds, in three packed columns, and the left third now carries the category bars, a Mon–Sun week strip and three numbers. |
-| [v2.1](v2.1.md) | ✅ Shipped | The UI pass. Every field answers again, one field retired, and every chart redrawn in the shape its own data has. Three-band layout, three rings. |
-| [v0.2](v0.2.md) | ✅ Shipped | The board: every field for today on one non-scrolling screen, tap a tile to log it, reachable from your phone. |
-| v0.1 | ✅ Shipped | The loop: one field per screen, scored rings, weekly fields, trends, insights, a 90-day demo. |
+| Pass | What it changed |
+| ---- | --------------- |
+| [0.1 – 0.2](docs/versions/v0.2.md) | The loop, then the board: the scoring, and every field for today on one non-scrolling screen, answered in place. |
+| [2.1 – 2.1.2](docs/versions/v2.1.md) | The interface: a shape per field, the density pass, and the one-screen home rework — rail, three category columns, score bar. |
+| [2.2 – 2.2.2](docs/versions/v2.2.2.md) | The editor: answer on the card, open the card for the exact answer, and log it in an instrument built around its value. |
+| 2.3 (next) | The phone: logging first, a dashboard built for glass, undo. |
+| 2.4 – 3.1 (planned) | Yours: card settings, the layout builder, the polish. |
+
+Every release has a one-page spec in [docs/versions](docs/versions/README.md) —
+the full ledger, with the numbering rules. The next four passes are in
+[docs/ROADMAP.md](docs/ROADMAP.md).
 
 ```
-   MON 19 OCTOBER          ● BODY 6/9 65     ● MIND 5/5 78    ● ATTENTION 3/3 93
-   ╭──────────────╮        ┌───────────────┐ ┌───────┐ ┌────────┐
-   │      ╭────╮  │        │ Slept  10.25  │ │ Steps │ │  Gym   │
-   │      │ 64 │  │        │ ═══▓▓▓══●───  │ ├───────┤ ├────────┤
-   │      ╰────╯  │        │ 1.2h past     │ │ 2,200 │ │ 3 wks  │
-   │ so far       │        └───────────────┘ └───────┘ └────────┘
-   │ YEST 21  USUAL 64     … one row per pair of fields, every row full …
+   TUESDAY 20 OCTOBER      ● BODY 7/9 97      ● MIND 5/5 100    ● ATTENTION 3/3 70
+   ╭───────────────╮      ┌──────────────────┐ ┌────────────┐ ┌──────────────┐
+   │      ╭─────╮  │      │ Slept   7.75 h   │ │ Deep       │ │ Screen       │
+   │      │ 89  │  │      │ ═══▓▓▓▓●▓▓────── │ │ blocks  3  │ │ 2.5 h        │
+   │      ╰─────╯  │      │ Inside 7–9 h     │ │ A full day │ │ 0.5h under   │
+   │ so far        │      └──────────────────┘ └────────────┘ └──────────────┘
+   │ YEST 93  USUAL 95    … one row per card, sized by what it holds …
    │ NEXT BEST MOVE
-   │ Clean day         +10
-   │ 18 of 30 days  [SHOW CARD]
-   │ THIS WEEK       64
-   │ ◉ · · · · · ·
-   ├─────────────────────────────────────────────────────────────────────────
+   │ Clean day            +10
+   │ 1 of 30 days   [SHOW CARD]
+   │ THIS WEEK            91
+   │ ◉ ● · · · · ·
+   ├────────────────────────────────────────────────────────────────────────────
    │ WHERE YOUR SCORE COMES FROM
-   │ ▮▮▮▮▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮
-   ╰─────────────────────────────────────────────────────────────────────────
+   │ ▮▮▮▮▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮│▮▮▮▮
+   ╰────────────────────────────────────────────────────────────────────────────
 ```
 
 ## Why it exists
 
 - **The cards are the only inputs.** Every field is answered where it is read:
-  drag the knob, tap the third block, flip the switch. Click the card itself and it
-  opens into a detail editor — the same field, bigger, with an exact number and the
-  whole week where the week is what counts. No second list of fields behind a
-  button; the guided `/log` flow stays for the phone, one field a screen.
+  drag the knob, tap the third block, flip the switch. Open the card itself and it
+  becomes an instrument — the same field, bigger, with the value as the input and
+  the whole week where the week is what counts. No second list of fields behind a
+  button; the guided `/log` flow is still there, one field a screen.
 - **One glance beats a list.** The board puts every field for today on one screen —
   no scrolling — grouped the way the rings are, and sized to what each field *is*:
   a yes/no is half a row, a gauge earns a full one. Rings cap at 100% each, so a
@@ -103,8 +103,10 @@ it. Start it as usual and it tells you the address:
   phone: http://192.168.1.24:8765   ← same Wi-Fi, nothing to install
 ```
 
-Open that `phone:` address on your phone and add it to the home screen: the board
-is one screen tall, no scrolling, and every tile is a touch target. There is no
+Open that `phone:` address on your phone and add it to the home screen. The board
+folds to one column there and every card opens into the same instrument you get on
+the desktop — the phone is a first-class surface, not a viewer. The guided `/log`
+flow is the one-field-per-screen alternative for a thumb. There is no
 authentication — it is your own machine on your own network. To keep it to this
 machine again, run it with the host pinned:
 
@@ -161,6 +163,10 @@ web/
   js/components/   card.js (one card, all instruments, inline logging),
                    editor.js (the detail sheet, one editor per field shape), sheet, toast
   js/views/        one small module per page
+docs/
+  ROADMAP.md       the next four passes, briefly
+  versions/        the ledger and one page per shipped release
+  notes/           the original brief and the v2.1.2 design brief
 ```
 
 Everything is hand-written ES modules — no build step, no npm, no framework.
@@ -174,9 +180,13 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-v2.2.2 — the whole loop works end to end, the whole day fits one screen at
-1440×900 without scrolling, every field is answered in place on the board, and
-every card opens into a detail editor built around its value: the number is the
-input, and the field gets the control that fits it. The bed time is one entry; the
-wake time is arithmetic.
-Next: [v2.3](v2.3.md), undo and the pointer pass.
+**v2.2.2 — the instrument opens.** The whole loop works end to end: the whole day
+fits one screen at 1440×900 without scrolling, every field is answered in place on
+the board, and every card opens into a detail editor built around its value — the
+number is the input, and the field gets the control that fits it. The bed time is
+one entry; the wake time is arithmetic.
+
+This is the basis everything else builds on: the board, the scoring and the
+instrument catalogue are settled, and the next passes add surfaces and choice
+rather than changing what is measured. Next: **v2.3 — the phone**
+([roadmap](docs/ROADMAP.md#v23--the-phone)).
