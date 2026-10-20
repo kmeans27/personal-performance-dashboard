@@ -14,6 +14,7 @@ Newest first. Every release is specified in its own file; the full ledger is in
 | Version | Status | What it did |
 | ------- | ------ | ----------- |
 | [v2.3](v2.3.md) | 🚧 Planned | Undo, and the pointer and focus pass. |
+| [v2.2.2](v2.2.2.md) | ✅ Shipped | The instrument opens. Every card's detail editor is rebuilt around its value: the big number is the input, the status is one sentence, and each field gets the control it deserves — a gauge, a goal-centred weight scale, a five-bar ladder, doors, a seven-day mixer, a thirty-day grid, a night strip. |
 | [v2.2.1](v2.2.1.md) | ✅ Shipped | Open it up. In bed takes one entry — the wake is derived from your sleep — on a 21:00–02:00 axis with your usual window. Every card opens into a detail editor shaped to its field, and the weekly cards let you fix any day the score counts. |
 | [v2.2](v2.2.md) | ✅ Shipped (early) | Log it on the board: every field answered where it is read. Landed inside v2.1.2. |
 | [v2.1.2](v2.1.2.md) | ✅ Shipped | The home screen rework. One screen of instruments: a rail with the score, yesterday, usual, the next best move and the week; three category columns; a score bar at the bottom. The cards are the only inputs — no sheet. |
@@ -173,9 +174,9 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-v2.2.1 — the whole loop works end to end, the whole day fits one screen at
-1440×900 without scrolling, every field is answered in place on the board, every
-card says in plain words how today sits against where it should land, and every
-card opens into a detail editor when the answer needs to be exact. The bed time is
-one entry; the wake time is arithmetic.
+v2.2.2 — the whole loop works end to end, the whole day fits one screen at
+1440×900 without scrolling, every field is answered in place on the board, and
+every card opens into a detail editor built around its value: the number is the
+input, and the field gets the control that fits it. The bed time is one entry; the
+wake time is arithmetic.
 Next: [v2.3](v2.3.md), undo and the pointer pass.

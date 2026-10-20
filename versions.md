@@ -12,6 +12,7 @@ top of the [README](README.md); this file is the full ledger.
 | [v2.1.2](v2.1.2.md) | The home screen rework | ✅ Done | One screen of instruments: a rail with ring, score, yesterday, usual, next best move and the week; three category columns; a score bar along the bottom. Every card shows today against its target in one line of plain words, and the cards are the only inputs — the quick-log sheet is gone. |
 | [v2.2](v2.2.md) | Log it on the board | ✅ Done (early) | Answer every field where it is read. Shipped inside v2.1.2, because that layout could not be drawn without it. |
 | [v2.2.1](v2.2.1.md) | Open it up | ✅ Done | In bed takes one entry — the wake is derived from your sleep — on a 21:00–02:00 axis with your usual window. Every card opens into a detail editor shaped to its field, and the weekly cards let you fix any of the seven days the score counts. |
+| [v2.2.2](v2.2.2.md) | The instrument opens | ✅ Done | The detail editor rebuilt around its value: the big number is the input, one sentence of status, and a recessed stage with a control per field — gauge, goal-centred weight scale, five-bar ladder, doors, seven-day mixer, thirty-day grid, night strip. |
 | [v2.3](v2.3.md) | Undo, and the pointer pass | 🚧 Planned | The safety net for live writes: an Undo toast on every write, 44px hit targets, and a focus audit at every breakpoint. |
 
 ## Numbering
@@ -20,7 +21,9 @@ The first two releases were numbered `0.1` and `0.2`. From here the release name
 *is* the roadmap name, so the package version follows it: v2.1 ships as `2.1.0`
 and v2.3 as `2.3.0`. A pass *on* a release keeps its number and adds a patch:
 v2.1.2 is the home screen rework on v2.1.1's screen, and v2.2.1 is the detail pass
-on v2.2. There was no `1.0` or `2.0` — the roadmap started at two.
+on v2.2. There was no `1.0` or `2.0` — the roadmap started at two. v2.2.2 is the
+second pass on that same editor: v2.2.1 made the cards open, v2.2.2 made what
+opens worth using.
 
 v2.2 is the one release with no build of its own: it shipped inside v2.1.2, and
 v2.2.1 finished it. The undo work that used to sit under v2.2 became [v2.3](v2.3.md)
@@ -37,5 +40,6 @@ v2.2.1 finished it. The undo work that used to sit under v2.2 became [v2.3](v2.3
 | [v2.1.2.md](v2.1.2.md) | The home screen rework: the rail, the three columns, every instrument, and the score bar. Also `design-pass-v2.1.2.md`, the brief it answered. |
 | [v2.2.md](v2.2.md) | Log it on the board: what shipped early, and where. |
 | [v2.2.1.md](v2.2.1.md) | Open it up: the one-entry bed time, the 21:00–02:00 axis, and the detail editor behind every card. |
+| [v2.2.2.md](v2.2.2.md) | The instrument opens: the rebuilt detail editor — the hero value, one sentence of status, and the control built for each field. |
 | [v2.3.md](v2.3.md) | The next release: undo, and the pointer and focus audit. |
 | Project-definition-human-nametbd.md | The original brief, kept for reference. |

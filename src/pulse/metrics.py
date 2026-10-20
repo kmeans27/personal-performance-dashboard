@@ -87,7 +87,7 @@ METRICS: tuple[Metric, ...] = (
         scorer="none",
         input="time",
         prompt="When did you get to bed?",
-        help="You only enter the time you went to bed; your wake time comes from your sleep. The ring scores how regular the time is.",
+        help="Your wake time comes from your sleep. The ring scores how regular this is.",
     ),
     _m(
         id="steps",
@@ -195,7 +195,7 @@ METRICS: tuple[Metric, ...] = (
         max=8,
         presets=(1,),
         prompt="Deep 45-minute blocks",
-        help="Capped at four — past that the day is already a win.",
+        help="Three fills the ring — a fourth does not add.",
     ),
     _m(
         id="learned",
