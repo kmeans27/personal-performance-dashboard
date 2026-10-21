@@ -36,23 +36,47 @@ function positionOf(value, lo, hi) {
 }
 
 function dragTarget(node, onMove, onDone) {
+  let active = null;
+  let finished = false;
+
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    active = null;
+    delete node.dataset.drag;
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", finish);
+    window.removeEventListener("pointercancel", finish);
+    window.removeEventListener("blur", finish);
+    onDone();
+  };
+
+  const move = (event) => {
+    if (active == null || event.pointerId !== active) return;
+    onMove(event);
+  };
+
   node.addEventListener("pointerdown", (event) => {
     if (node.dataset.locked === "true") return;
+    if (event.button != null && event.button !== 0) return;
     event.preventDefault();
-    node.setPointerCapture(event.pointerId);
+    active = event.pointerId;
+    finished = false;
+    try {
+      node.setPointerCapture(event.pointerId);
+    } catch {
+      /* Window listeners below still carry the drag if capture is refused. */
+    }
     node.dataset.drag = "true";
     onMove(event);
-    const move = (next) => onMove(next);
-    const finish = () => {
-      delete node.dataset.drag;
-      node.removeEventListener("pointermove", move);
-      node.removeEventListener("pointerup", finish);
-      node.removeEventListener("pointercancel", finish);
-      onDone();
-    };
-    node.addEventListener("pointermove", move);
-    node.addEventListener("pointerup", finish);
-    node.addEventListener("pointercancel", finish);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    window.addEventListener("blur", finish);
+  });
+
+  node.addEventListener("lostpointercapture", () => {
+    if (active != null) finish();
   });
 }
 
@@ -159,7 +183,7 @@ function scaleInstrument(tile, { save, locked, onPreview, onHold }) {
 
   if (!locked) {
     dragTarget(
-      track,
+      el,
       (event) => {
         const raw = roundTo(valueFromEvent(track, event, lo, hi), step);
         current = Math.max(lo, Math.min(hi, raw));
@@ -322,6 +346,7 @@ function ladderInstrument(tile, { save, locked }) {
   const row = h("div", { class: "ladder" });
   for (let index = 0; index < metric; index += 1) {
     const value = low + index;
+    const share = shares[index] ?? 1;
     const rung = h(
       "button",
       {
@@ -329,9 +354,11 @@ function ladderInstrument(tile, { save, locked }) {
         class: "ladder-rung",
         "data-step": String(value),
         "aria-label": labels[index] || String(value),
+        style: { "--share": String(share), "--rest": String(1 - share) },
         onclick: locked ? undefined : () => save({ [tile.fields[0]]: value }),
       },
-      h("span", { class: "ladder-bar", style: { "--share": String(shares[index] ?? 1) } }),
+      h("span", { class: "ladder-spacer", "aria-hidden": "true" }),
+      h("span", { class: "ladder-bar" }),
       h("span", { class: "ladder-word" }, labels[index] || String(value))
     );
     rungs.push(rung);
@@ -440,7 +467,7 @@ function bedInstrument(tile, { save, locked, onPreview, onHold }) {
     el.setAttribute("aria-valuemax", "1439");
 
     dragTarget(
-      track,
+      el,
       (event) => {
         const raw = valueFromEvent(track, event, START, START + SPAN);
         value = ((Math.round(raw / 15) * 15) % 1440 + 1440) % 1440;
@@ -574,15 +601,21 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
      the target it is heading for. The server's own sentence comes back when
      the pointer is let go and the write has landed. */
   let held = false;
+  let cardEl = null;
   const options = {
     locked,
     save: (values) => onSave?.(values),
     onPreview: (text) => {
       number.textContent = text;
+      unit.textContent = tile.unit || "";
     },
     onHold: (state) => {
       if (held === state) return;
       held = state;
+      if (cardEl) {
+        if (state) cardEl.dataset.dragging = "true";
+        else delete cardEl.dataset.dragging;
+      }
       gap.textContent = state ? tile.target_label || "" : gap.dataset.answer || "";
     },
   };
@@ -602,6 +635,7 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
     instrument.el,
     gap
   );
+  cardEl = el;
 
   function setValue(next) {
     number.textContent = next.display == null ? "—" : next.display;
@@ -619,8 +653,12 @@ export function createCard(tile, { accent, locked = false, onSave, onOpen } = {}
     );
 
     label.textContent = next.label;
-    setValue(next);
-    instrument.set(next);
+    // A write landing while the pointer is still down never pulls the number
+    // or the knob away from the value under the hand.
+    if (!held) {
+      setValue(next);
+      instrument.set(next);
+    }
 
     head.dataset.done = next.state === "done" ? "true" : "false";
     if (next.state === "done") {

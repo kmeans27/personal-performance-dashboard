@@ -8,14 +8,14 @@ Not a habit tracker. An instrument.
 
 ## Versions
 
-Pulse is built in passes, and the passes stack. **Latest: v2.2.5 — the board
-answers.** Next: **v2.3 — the phone.**
+Pulse is built in passes, and the passes stack. **Latest: v2.2.6 — the ladder
+you can see.** Next: **v2.3 — the phone.**
 
 | Pass | What it changed |
 | ---- | --------------- |
 | [0.1 – 0.2](docs/versions/v0.2.md) | The loop, then the board: the scoring, and every field for today on one non-scrolling screen, answered in place. |
 | [2.1 – 2.1.2](docs/versions/v2.1.md) | The interface: a shape per field, the density pass, and the one-screen home rework — rail, three category columns, score bar. |
-| [2.2 – 2.2.5](docs/versions/v2.2.5.md) | The editor and the desktop passes: answer on the card, open it for the exact answer, and keep the board to one screen — a rail that stacks, notes on their own row, a score bar grouped by category, a column that fills the height it has, and a board that answers while you drag. |
+| [2.2 – 2.2.6](docs/versions/v2.2.6.md) | The editor and the desktop passes: answer on the card, open it for the exact answer, and keep the board to one screen — a rail that stacks, notes on their own row, a score bar grouped by category, a column that fills the height it has, and a board that answers while you drag. |
 | 2.3 (next) | The phone: logging first, a dashboard built for glass, undo. |
 | 2.4 – 3.1 (planned) | Yours: card settings, the layout builder, the polish. |
 
@@ -180,14 +180,22 @@ Self-hosted, single process, one SQLite file. Back it up by copying it.
 
 ## Status
 
-**v2.2.5 — the board answers.** The board answers while you work, not after
-you finish. Dragging a rail moves the number with the pointer — the hours,
-the minutes, the clock — and the line of words under the card shows the
-target until the write lands and the server's own sentence after it. One
-write per drag. Mood and Energy now draw the same ladder as the detail
-editor: five bars on a hairline, the word under each, the usual marked on the
-line. And an answer fills the space its card has, which is what the Main
-task card in the Attention column needed.
+**v2.2.6 — the ladder you can see.** v2.2.5 put the editor's ladder on Mood
+and Energy and made the board answer while you drag; v2.2.6 finishes both.
+The ladder now sits in the same recessed stage the detail editor uses, with
+visibly filled bars and the chosen step in the category accent, so the cards
+read as scales rather than as empty boxes. The whole instrument — not just the
+thin rail — is the drag target, the number and unit follow the pointer, the
+card brightens while it is held, and a write landing mid-drag can no longer
+pull the number away. One write per drag, and the server's sentence after it.
+
+v2.2.5 made the board answer while you work, not after you finish. Dragging a
+rail moves the number with the pointer — the hours, the minutes, the clock —
+and the line of words under the card shows the target until the write lands
+and the server's own sentence after it. One write per drag. Mood and Energy
+now draw the same ladder as the detail editor: five bars on a hairline, the
+word under each, the usual marked on the line. And an answer fills the space
+its card has, which is what the Main task card in the Attention column needed.
 
 v2.2.4 gave the board its height back: the columns fill the screen, each
 category has its own row plan, and a note opening under a pair takes its

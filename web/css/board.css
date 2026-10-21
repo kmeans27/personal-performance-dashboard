@@ -557,6 +557,21 @@ body[data-board="true"] .footnote {
   color: var(--ink-4);
 }
 
+/* While the hand is on a rail the card is live: the number brightens and
+   the border answers, so the preview cannot be mistaken for the old value. */
+.card[data-dragging="true"] {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background: var(--surface-2);
+}
+
+.card[data-dragging="true"] .card-value {
+  color: var(--ink);
+}
+
+.card[data-dragging="true"] .card-gap {
+  color: var(--ink-2);
+}
+
 .card-unit {
   font-size: 0.52em;
   font-weight: 500;
@@ -946,12 +961,16 @@ body[data-board="true"] .footnote {
 .ladder-wrap {
   position: relative;
   min-height: 0;
+  padding: 7px 8px 0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--bg);
 }
 
 .ladder {
   display: flex;
   align-items: flex-end;
-  gap: clamp(4px, 0.6vw, 10px);
+  gap: clamp(4px, 0.55vw, 9px);
   height: 88px;
 }
 
@@ -960,9 +979,9 @@ body[data-board="true"] .footnote {
 .ladder-wrap::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 22px;
+  left: 8px;
+  right: 8px;
+  bottom: 20px;
   height: 1px;
   background: var(--line);
 }
@@ -973,7 +992,6 @@ body[data-board="true"] .footnote {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
   height: 100%;
   min-width: 0;
   padding: 0;
@@ -988,19 +1006,30 @@ body[data-board="true"] .footnote {
   border-radius: var(--r-xs);
 }
 
+/* The spacer and the bar share the height above the word in the same ratio
+   as the editor's five steps. Growing them with flex keeps the ladder solid
+   even where a browser is unsure about multiplying a percentage by a
+   number inside calc(). */
+.ladder-spacer {
+  flex: var(--rest, 0) 1 0;
+  width: 100%;
+  min-height: 0;
+}
+
 .ladder-bar {
+  flex: var(--share, 1) 1 0;
   width: 100%;
   max-width: 78px;
-  height: calc((100% - 26px) * var(--share, 1));
-  min-height: 8px;
+  min-height: 10px;
   border-radius: 10px 10px 6px 6px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
   transition: background var(--dur-2) var(--ease-out),
     box-shadow var(--dur-2) var(--ease-out);
 }
 
 .ladder-rung:hover .ladder-bar {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.17);
 }
 
 .ladder-rung[data-on="true"] .ladder-bar {
@@ -1009,6 +1038,8 @@ body[data-board="true"] .footnote {
 }
 
 .ladder-word {
+  flex: none;
+  margin-top: 8px;
   font-size: 11.5px;
   line-height: 1;
   color: var(--ink-3);
@@ -1030,7 +1061,7 @@ body[data-board="true"] .footnote {
 /* Where your usual sits, on the line the bars stand on. */
 .ladder-usual {
   position: absolute;
-  bottom: 22px;
+  bottom: 20px;
   width: 2px;
   height: 8px;
   border-radius: 1px;

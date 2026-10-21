@@ -20,13 +20,14 @@ Pulse has been built in passes, and they stack:
 - **2.4 – 3.1 — yours.** Card settings, then the layout builder, then the polish.
 
 If you read only three files: [v2.1](v2.1.md) for why a field looks the way it
-does, [v2.2.2](v2.2.2.md) for the editor, and [v2.2.4](v2.2.4.md) for the board
+does, [v2.2.2](v2.2.2.md) for the editor, and [v2.2.6](v2.2.6.md) for the board
 as it is today.
 
 ## 2.2 — the editor
 
 | Version | Name | What it changed |
 | ------- | ---- | --------------- |
+| [v2.2.6](v2.2.6.md) | The ladder you can see | Mood and Energy draw the editor's ladder inside a recessed stage, with visibly filled bars and the chosen step in the accent. The whole instrument is the drag target, the number and unit follow the pointer, the card brightens while held, and a write landing mid-drag cannot move the number. |
 | [v2.2.5](v2.2.5.md) | The board answers | The number on a card follows the pointer while a rail is held, and the line of words shows the target until the write lands. Mood and energy draw the editor's ladder, and the answer on a card fills the space the card has. |
 | [v2.2.4](v2.2.4.md) | Desktop fill | The columns fill the height they have. A column is a stack of rows, a row is a pair of cards, and every category has its own plan for how tall its rows are: the track thickens, the blocks and chips grow, the clean grid takes its card, and the note under a pair takes its height from the rows around it. |
 | [v2.2.3](v2.2.3.md) | Desktop polish | The rail stacks everything it has, including a Sources card that stays only until both imports are live; Main task joins Attention; notes open as a row of their own; mood and energy become one row of chips; the score bar groups by category; and a perfect day gets one quiet moment. |
@@ -90,5 +91,6 @@ to the surface where a stray tap actually happens.
 | [v2.2.3.md](v2.2.3.md) | Desktop polish: the rail that stacks, notes on their own row, the grouped score bar. |
 | [v2.2.4.md](v2.2.4.md) | Desktop fill: the column that fills the height it has, and the row plan behind it. |
 | [v2.2.5.md](v2.2.5.md) | The board answers: the live number under the pointer, and the ladder on Mood and Energy. |
+| [v2.2.6.md](v2.2.6.md) | The ladder you can see: the staged meter on Mood and Energy, and the whole instrument as the live drag target. |
 | [../notes/brief.md](../notes/brief.md) | The original brief, kept for reference. |
 | [../notes/design-pass-v2.1.2.md](../notes/design-pass-v2.1.2.md) | The design brief v2.1.2 answered. |
